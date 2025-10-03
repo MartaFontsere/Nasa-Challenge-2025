@@ -1,0 +1,179 @@
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { AsteroidSelector } from "@/components/simulator/AsteroidSelector";
+import { LocationPicker } from "@/components/simulator/LocationPicker";
+import { ImpactMap } from "@/components/simulator/ImpactMap";
+import { ResultsPanel } from "@/components/simulator/ResultsPanel";
+import { mockAsteroids, BARCELONA_COORDS } from "@/lib/mock-data";
+import {
+  calculateImpactEffects,
+  getImpactZones,
+} from "@/lib/impact-calculations";
+import type {
+  Asteroid,
+  CustomAsteroidInput,
+  ImpactLocation,
+} from "@/types/asteroid";
+import type { ImpactResults, ImpactZone } from "@/types/impact";
+import { ArrowLeft } from "lucide-react";
+
+function SimulatorContent() {
+  const searchParams = useSearchParams();
+  const asteroidId = searchParams?.get("asteroidId");
+
+  const [selectedAsteroid, setSelectedAsteroid] = useState<Asteroid | null>(
+    null
+  );
+  const [customAsteroid, setCustomAsteroid] = useState<CustomAsteroidInput>({
+    diameter: 500,
+    velocity: 20,
+    angle: 45,
+    composition: "rocky",
+  });
+  const [location, setLocation] = useState<ImpactLocation>(BARCELONA_COORDS);
+  const [results, setResults] = useState<ImpactResults | null>(null);
+  const [impactZones, setImpactZones] = useState<ImpactZone[]>([]);
+  const [useCustom, setUseCustom] = useState(false);
+
+  // Load asteroid from URL parameter
+  useEffect(() => {
+    if (asteroidId) {
+      const asteroid = mockAsteroids.find((a) => a.id === asteroidId);
+      if (asteroid) {
+        setSelectedAsteroid(asteroid);
+      }
+    } else {
+      // Default to first asteroid
+      setSelectedAsteroid(mockAsteroids[0]);
+    }
+  }, [asteroidId]);
+
+  const handleCalculate = () => {
+    if (useCustom) {
+      // Create a temporary asteroid object from custom inputs
+      const customAsteroidObj: Asteroid = {
+        id: "custom",
+        name: "Custom Asteroid",
+        diameter: customAsteroid.diameter,
+        velocity: customAsteroid.velocity,
+        composition: customAsteroid.composition,
+      };
+      const impactResults = calculateImpactEffects(
+        customAsteroidObj,
+        customAsteroid.angle,
+        location
+      );
+      setResults(impactResults);
+      setImpactZones(getImpactZones(impactResults));
+    } else if (selectedAsteroid) {
+      // Use a default impact angle of 45 degrees for preset asteroids
+      const impactResults = calculateImpactEffects(
+        selectedAsteroid,
+        45,
+        location
+      );
+      setResults(impactResults);
+      setImpactZones(getImpactZones(impactResults));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Solar System
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold">Impact Simulator</h1>
+              <p className="text-sm text-muted-foreground">
+                Configure asteroid parameters and target location
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Configuration */}
+          <div className="space-y-6">
+            <AsteroidSelector
+              selectedAsteroid={selectedAsteroid}
+              customAsteroid={customAsteroid}
+              onAsteroidSelect={(asteroid) => {
+                setSelectedAsteroid(asteroid);
+                setUseCustom(false);
+              }}
+              onCustomChange={(custom) => {
+                setCustomAsteroid(custom);
+                setUseCustom(true);
+              }}
+            />
+
+            <LocationPicker
+              location={location}
+              onLocationChange={setLocation}
+            />
+
+            <Button size="lg" className="w-full" onClick={handleCalculate}>
+              Calculate Impact
+            </Button>
+          </div>
+
+          {/* Right Column - Map */}
+          <div>
+            <ImpactMap
+              location={location}
+              zones={impactZones}
+              onLocationChange={setLocation}
+            />
+          </div>
+        </div>
+
+        {/* Results Section */}
+        <div className="mt-6 grid grid-cols-1">
+          <ResultsPanel results={results} />
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t mt-12 py-6">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>
+            Calculations based on scientific formulas from Collins et al.
+            (2005), Holsapple (1993), and Melosh (1989)
+          </p>
+          <p className="mt-1">
+            Data sources: NASA NEO Web Service • JPL Small-Body Database • CNEOS
+            Sentry
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default function SimulatorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <SimulatorContent />
+    </Suspense>
+  );
+}
