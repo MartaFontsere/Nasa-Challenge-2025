@@ -12,18 +12,18 @@ export class AsteroidService {
    * @param options - Configuration options for fetching
    * @returns Promise<Asteroid[]> - Array of asteroids or fallback data
    */
-  static async getAsteroids(options: {
-    source: "nasa" | "mock";
+  static async getAsteroids(options?: {
+    source?: "nasa" | "mock";
     limit?: number;
   }): Promise<Asteroid[]> {
     // Return mock data if explicitly requested
-    if (options.source === "mock") {
+    if (options?.source === "mock") {
       return mockAsteroids;
     }
 
     // Try to fetch from NASA API
     try {
-      const asteroids = await fetchHazardousAsteroids(options.limit || 6);
+      const asteroids = await fetchHazardousAsteroids(options?.limit || 6);
 
       if (asteroids.length > 0) {
         return asteroids;
@@ -38,22 +38,6 @@ export class AsteroidService {
       );
       return mockAsteroids;
     }
-  }
-
-  /**
-   * Get asteroids optimized for solar system visualization
-   * Returns a mix of diverse asteroids with good visual variety
-   */
-  static async getSolarSystemAsteroids(): Promise<Asteroid[]> {
-    return this.getAsteroids({ source: "nasa", limit: 8 });
-  }
-
-  /**
-   * Get asteroids optimized for impact simulation
-   * Focuses on potentially hazardous asteroids
-   */
-  static async getSimulationAsteroids(): Promise<Asteroid[]> {
-    return this.getAsteroids({ source: "nasa", limit: 5 });
   }
 
   /**

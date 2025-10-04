@@ -64,7 +64,9 @@ export async function fetchHazardousAsteroids(limit = 5): Promise<Asteroid[]> {
       api_key: NASA_API_KEY,
     });
 
-    const response = await fetch(`${BROWSE_URL}?${params}`);
+    const response = await fetch(`${BROWSE_URL}?${params}`, {
+      next: { revalidate: 3600 }, // Cache for 1 hour
+    });
 
     if (!response.ok) {
       throw new Error(`NASA API error: ${response.status}`);

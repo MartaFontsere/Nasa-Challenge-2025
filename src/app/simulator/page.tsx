@@ -4,7 +4,7 @@ import type { Asteroid } from "@/types/asteroid";
 import SimulatorClient from "./SimulatorClient";
 
 async function SimulatorContent() {
-  const asteroids = await AsteroidService.getSimulationAsteroids();
+  const asteroids = await AsteroidService.getAsteroids();
   return <SimulatorClient asteroids={asteroids} />;
 }
 
