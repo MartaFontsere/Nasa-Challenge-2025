@@ -31,8 +31,8 @@ export function Navigation() {
                 isHomePage && pathname === "/"
                   ? "bg-white text-black hover:bg-gray-200"
                   : isHomePage
-                  ? "text-white hover:bg-slate-800 hover:text-white"
-                  : ""
+                    ? "text-white hover:bg-slate-800 hover:text-white"
+                    : ""
               }
             >
               <Globe className="w-4 h-4 mr-2" />

@@ -25,6 +25,7 @@ export interface ImpactResults {
     fireball: number;
     shockwave: number;
     thermalRadiation: number;
+    tsunami: number | null; // null if not ocean impact
     total: number;
   };
 
@@ -34,9 +35,10 @@ export interface ImpactResults {
 }
 
 export interface ImpactZone {
-  type: "fireball" | "shockwave" | "thermal" | "crater";
+  type: "fireball" | "shockwave" | "thermal" | "crater" | "tsunami";
   radius: number; // km
   color: string;
   label: string;
   casualties?: number;
+  isCoastal?: boolean; // For tsunami zones
 }

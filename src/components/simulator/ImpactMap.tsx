@@ -10,12 +10,16 @@ interface ImpactMapProps {
   location: ImpactLocation;
   zones: ImpactZone[];
   onLocationChange: (location: ImpactLocation) => void;
+  showMarker?: boolean;
+  disableClick?: boolean;
 }
 
 export function ImpactMap({
   location,
   zones,
   onLocationChange,
+  showMarker = true,
+  disableClick = false,
 }: ImpactMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
@@ -32,7 +36,7 @@ export function ImpactMap({
       // Initialize map
       const map = L.map(mapRef.current).setView(
         [location.lat, location.lng],
-        10,
+        10
       );
 
       // Add OpenStreetMap tiles
@@ -42,13 +46,15 @@ export function ImpactMap({
         maxZoom: 19,
       }).addTo(map);
 
-      // Add click handler
-      map.on("click", (e: L.LeafletMouseEvent) => {
-        onLocationChange({
-          lat: e.latlng.lat,
-          lng: e.latlng.lng,
+      // Add click handler (only if not disabled)
+      if (!disableClick) {
+        map.on("click", (e: L.LeafletMouseEvent) => {
+          onLocationChange({
+            lat: e.latlng.lat,
+            lng: e.latlng.lng,
+          });
         });
-      });
+      }
 
       leafletMapRef.current = map;
     });
@@ -59,7 +65,7 @@ export function ImpactMap({
         leafletMapRef.current = null;
       }
     };
-  }, []);
+  }, [disableClick, onLocationChange]);
 
   // Update map center and marker when location changes
   useEffect(() => {
@@ -73,24 +79,28 @@ export function ImpactMap({
       // Remove existing marker
       if (markerRef.current) {
         markerRef.current.remove();
+        markerRef.current = null;
       }
 
-      // Create custom icon for impact location
-      const icon = L.divIcon({
-        className: "custom-marker",
-        html: `<div style="background: red; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
-      });
+      // Only show marker if showMarker is true
+      if (showMarker) {
+        // Create custom icon for impact location
+        const icon = L.divIcon({
+          className: "custom-marker",
+          html: `<div style="background: red; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        });
 
-      // Add new marker
-      const marker = L.marker([location.lat, location.lng], { icon })
-        .addTo(map)
-        .bindPopup("Impact Location");
+        // Add new marker
+        const marker = L.marker([location.lat, location.lng], { icon })
+          .addTo(map)
+          .bindPopup("Impact Location");
 
-      markerRef.current = marker;
+        markerRef.current = marker;
+      }
     });
-  }, [location.lat, location.lng]);
+  }, [location.lat, location.lng, showMarker]);
 
   // Update impact zones
   useEffect(() => {
@@ -105,17 +115,40 @@ export function ImpactMap({
       circlesRef.current = [];
 
       // Add new circles (in reverse order so smallest is on top)
-      for (const zone of [...zones].reverse()) {
-        const circle = L.circle([location.lat, location.lng], {
-          color: zone.color,
-          fillColor: zone.color,
-          fillOpacity: 0.2,
-          radius: zone.radius * 1000, // Convert km to meters
-        })
-          .addTo(map)
-          .bindPopup(zone.label);
+      if (zones.length > 0) {
+        for (const zone of [...zones].reverse()) {
+          const circle = L.circle([location.lat, location.lng], {
+            color: zone.color,
+            fillColor: zone.color,
+            fillOpacity: 0.2,
+            radius: zone.radius * 1000, // Convert km to meters
+          })
+            .addTo(map)
+            .bindPopup(zone.label);
 
-        circlesRef.current.push(circle);
+          circlesRef.current.push(circle);
+        }
+
+        // Find the crater zone specifically for zoom calculation
+        const craterZone = zones.find((z) => z.type === "crater");
+        if (craterZone) {
+          // Calculate bounds to show ONLY the crater prominently
+          // Use exactly the crater size plus small padding
+          const craterRadiusKm = craterZone.radius;
+
+          // Create bounds that will show the crater filling most of the screen
+          const bounds = L.circle([location.lat, location.lng], {
+            radius: craterRadiusKm * 1000 * 1.5, // 1.5x crater radius for slight padding
+          }).getBounds();
+
+          // Fit map to show only the crater
+          map.fitBounds(bounds, {
+            padding: [20, 20],
+            maxZoom: 18, // Allow closer zoom
+            animate: true,
+            duration: 1,
+          });
+        }
       }
     });
   }, [zones, location.lat, location.lng]);

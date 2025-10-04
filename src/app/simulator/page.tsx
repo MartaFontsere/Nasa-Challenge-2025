@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AsteroidSelector } from "@/components/simulator/AsteroidSelector";
-import { LocationPicker } from "@/components/simulator/LocationPicker";
 import { ImpactMap } from "@/components/simulator/ImpactMap";
 import { ResultsPanel } from "@/components/simulator/ResultsPanel";
 import { Navigation } from "@/components/Navigation";
@@ -19,13 +18,14 @@ import type {
   ImpactLocation,
 } from "@/types/asteroid";
 import type { ImpactResults, ImpactZone } from "@/types/impact";
+import { RotateCcw } from "lucide-react";
 
 function SimulatorContent() {
   const searchParams = useSearchParams();
   const asteroidId = searchParams?.get("asteroidId");
 
   const [selectedAsteroid, setSelectedAsteroid] = useState<Asteroid | null>(
-    null,
+    null
   );
   const [customAsteroid, setCustomAsteroid] = useState<CustomAsteroidInput>({
     diameter: 500,
@@ -34,6 +34,7 @@ function SimulatorContent() {
     composition: "rocky",
   });
   const [location, setLocation] = useState<ImpactLocation>(BARCELONA_COORDS);
+  const [locationSelected, setLocationSelected] = useState(false);
   const [results, setResults] = useState<ImpactResults | null>(null);
   const [impactZones, setImpactZones] = useState<ImpactZone[]>([]);
   const [useCustom, setUseCustom] = useState(false);
@@ -52,6 +53,8 @@ function SimulatorContent() {
   }, [asteroidId]);
 
   const handleCalculate = () => {
+    if (!locationSelected) return;
+
     if (useCustom) {
       // Create a temporary asteroid object from custom inputs
       const customAsteroidObj: Asteroid = {
@@ -64,7 +67,7 @@ function SimulatorContent() {
       const impactResults = calculateImpactEffects(
         customAsteroidObj,
         customAsteroid.angle,
-        location,
+        location
       );
       setResults(impactResults);
       setImpactZones(getImpactZones(impactResults));
@@ -73,11 +76,23 @@ function SimulatorContent() {
       const impactResults = calculateImpactEffects(
         selectedAsteroid,
         45,
-        location,
+        location
       );
       setResults(impactResults);
       setImpactZones(getImpactZones(impactResults));
     }
+  };
+
+  const handleReset = () => {
+    setResults(null);
+    setImpactZones([]);
+    setLocationSelected(false);
+    setLocation(BARCELONA_COORDS);
+  };
+
+  const handleLocationChange = (newLocation: ImpactLocation) => {
+    setLocation(newLocation);
+    setLocationSelected(true);
   };
 
   return (
@@ -103,14 +118,32 @@ function SimulatorContent() {
               }}
             />
 
-            <LocationPicker
-              location={location}
-              onLocationChange={setLocation}
-            />
-
-            <Button size="lg" className="w-full" onClick={handleCalculate}>
-              Calculate Impact
-            </Button>
+            <div className="space-y-3">
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={handleCalculate}
+                disabled={!locationSelected}
+              >
+                Calculate Impact
+              </Button>
+              {results && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleReset}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  New Impact
+                </Button>
+              )}
+              {!locationSelected && (
+                <p className="text-xs text-center text-muted-foreground">
+                  Click on the map to select an impact location
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Right Column - Map */}
@@ -118,7 +151,9 @@ function SimulatorContent() {
             <ImpactMap
               location={location}
               zones={impactZones}
-              onLocationChange={setLocation}
+              onLocationChange={handleLocationChange}
+              showMarker={!results}
+              disableClick={!!results}
             />
           </div>
         </div>

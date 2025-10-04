@@ -174,6 +174,45 @@ export function calculateTsunamiHeight(
 }
 
 /**
+ * Estimate tsunami casualties for ocean impacts
+ * PROTOTYPE: Simplified model for demonstration
+ * Real implementation would need:
+ * - Coastal population density data
+ * - Bathymetry and topography
+ * - Wave propagation models
+ * - Evacuation time considerations
+ */
+export function estimateTsunamiCasualties(
+  tsunamiHeight: number | null,
+  craterDiameter: number,
+): number | null {
+  if (!tsunamiHeight) return null;
+
+  // Estimate affected coastal area based on tsunami reach
+  // Simplified: larger craters = wider tsunami impact
+  // Inundation distance roughly proportional to tsunami height
+  const inundationDistanceKm = tsunamiHeight * 0.5; // Very rough estimate
+  const affectedCoastlineKm = Math.sqrt(craterDiameter / 1000) * 100; // Rough estimate
+
+  // Coastal population density (people per km of coastline)
+  // Averaged for coastal urban areas
+  const coastalPopDensity = 10000; // people per km
+
+  // Area affected: coastline length * inundation distance
+  const affectedArea = affectedCoastlineKm * inundationDistanceKm;
+
+  // Mortality rate based on tsunami height
+  let mortalityRate = 0.1; // 10% baseline
+  if (tsunamiHeight > 10) mortalityRate = 0.5; // 50% for 10-30m
+  if (tsunamiHeight > 30) mortalityRate = 0.8; // 80% for >30m
+
+  // Estimate population in affected area
+  const affectedPopulation = affectedCoastlineKm * coastalPopDensity;
+
+  return Math.floor(affectedPopulation * mortalityRate);
+}
+
+/**
  * Estimate casualties based on impact zones and population density
  * This is a very rough estimate assuming urban population density
  * Real calculations would require GIS population data
@@ -184,11 +223,14 @@ export function estimateCasualties(
   fireballRadius: number,
   shockwaveRadius: number,
   thermalRadius: number,
+  tsunamiHeight: number | null,
+  craterDiameter: number,
   populationDensity: number = POPULATION_DENSITY_URBAN,
 ): {
   fireball: number;
   shockwave: number;
   thermalRadiation: number;
+  tsunami: number | null;
   total: number;
 } {
   // Area in km²
@@ -204,11 +246,22 @@ export function estimateCasualties(
   );
   const thermalCasualties = Math.floor(thermalArea * populationDensity * 0.3);
 
+  // Tsunami casualties (if ocean impact)
+  const tsunamiCasualties = estimateTsunamiCasualties(
+    tsunamiHeight,
+    craterDiameter,
+  );
+
   return {
     fireball: fireballCasualties,
     shockwave: shockwaveCasualties,
     thermalRadiation: thermalCasualties,
-    total: fireballCasualties + shockwaveCasualties + thermalCasualties,
+    tsunami: tsunamiCasualties,
+    total:
+      fireballCasualties +
+      shockwaveCasualties +
+      thermalCasualties +
+      (tsunamiCasualties || 0),
   };
 }
 
@@ -259,6 +312,8 @@ export function calculateImpactEffects(
     fireballRadius,
     shockwaveRadius,
     thermalRadius,
+    tsunamiHeight,
+    craterDiameter,
   );
 
   // Energy comparisons
