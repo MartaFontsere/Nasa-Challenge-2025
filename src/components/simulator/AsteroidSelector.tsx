@@ -24,9 +24,9 @@ import type {
   AsteroidComposition,
   CustomAsteroidInput,
 } from "@/types/asteroid";
-import { mockAsteroids } from "@/lib/mock-data";
 
 interface AsteroidSelectorProps {
+  asteroids: Asteroid[];
   selectedAsteroid: Asteroid | null;
   customAsteroid: CustomAsteroidInput;
   onAsteroidSelect: (asteroid: Asteroid) => void;
@@ -34,6 +34,7 @@ interface AsteroidSelectorProps {
 }
 
 export function AsteroidSelector({
+  asteroids,
   selectedAsteroid,
   customAsteroid,
   onAsteroidSelect,
@@ -65,7 +66,7 @@ export function AsteroidSelector({
               <Select
                 value={selectedAsteroid?.id || ""}
                 onValueChange={(id) => {
-                  const asteroid = mockAsteroids.find((a) => a.id === id);
+                  const asteroid = asteroids.find((a) => a.id === id);
                   if (asteroid) onAsteroidSelect(asteroid);
                 }}
               >
@@ -73,7 +74,7 @@ export function AsteroidSelector({
                   <SelectValue placeholder="Select an asteroid" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockAsteroids.map((asteroid) => (
+                  {asteroids.map((asteroid) => (
                     <SelectItem key={asteroid.id} value={asteroid.id}>
                       {asteroid.name} (
                       {asteroid.diameter >= 1000
