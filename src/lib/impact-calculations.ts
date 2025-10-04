@@ -44,7 +44,7 @@ function getDensity(composition: AsteroidComposition): number {
  */
 export function calculateMass(
   diameter: number,
-  composition: AsteroidComposition,
+  composition: AsteroidComposition
 ): number {
   const radius = diameter / 2;
   const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
@@ -82,7 +82,7 @@ export function joulesToTNTMegatons(joules: number): number {
 export function calculateCraterDiameter(
   energy: number,
   angle: number,
-  composition: AsteroidComposition,
+  composition: AsteroidComposition
 ): number {
   const energyMegatons = joulesToTNTMegatons(energy);
 
@@ -164,7 +164,7 @@ export function calculateEarthquakeMagnitude(energy: number): number {
  */
 export function calculateTsunamiHeight(
   craterDiameter: number,
-  isOceanImpact: boolean,
+  isOceanImpact: boolean
 ): number | null {
   if (!isOceanImpact) return null;
 
@@ -184,7 +184,7 @@ export function calculateTsunamiHeight(
  */
 export function estimateTsunamiCasualties(
   tsunamiHeight: number | null,
-  craterDiameter: number,
+  craterDiameter: number
 ): number | null {
   if (!tsunamiHeight) return null;
 
@@ -225,7 +225,7 @@ export function estimateCasualties(
   thermalRadius: number,
   tsunamiHeight: number | null,
   craterDiameter: number,
-  populationDensity: number = POPULATION_DENSITY_URBAN,
+  populationDensity: number = POPULATION_DENSITY_URBAN
 ): {
   fireball: number;
   shockwave: number;
@@ -242,14 +242,14 @@ export function estimateCasualties(
   // Casualties (100% in fireball, 80% in shockwave, 30% in thermal)
   const fireballCasualties = Math.floor(fireballArea * populationDensity * 1.0);
   const shockwaveCasualties = Math.floor(
-    shockwaveArea * populationDensity * 0.8,
+    shockwaveArea * populationDensity * 0.8
   );
   const thermalCasualties = Math.floor(thermalArea * populationDensity * 0.3);
 
   // Tsunami casualties (if ocean impact)
   const tsunamiCasualties = estimateTsunamiCasualties(
     tsunamiHeight,
-    craterDiameter,
+    craterDiameter
   );
 
   return {
@@ -283,7 +283,7 @@ export function isOceanImpact(lat: number, lng: number): boolean {
 export function calculateImpactEffects(
   asteroid: Asteroid,
   angle: number,
-  location: { lat: number; lng: number },
+  location: { lat: number; lng: number }
 ): ImpactResults {
   // Calculate basic properties
   const mass = calculateMass(asteroid.diameter, asteroid.composition);
@@ -293,7 +293,7 @@ export function calculateImpactEffects(
   const craterDiameter = calculateCraterDiameter(
     energy,
     angle,
-    asteroid.composition,
+    asteroid.composition
   );
   const craterDepth = calculateCraterDepth(craterDiameter);
 
@@ -313,7 +313,7 @@ export function calculateImpactEffects(
     shockwaveRadius,
     thermalRadius,
     tsunamiHeight,
-    craterDiameter,
+    craterDiameter
   );
 
   // Energy comparisons

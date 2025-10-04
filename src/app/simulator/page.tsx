@@ -153,7 +153,6 @@ function SimulatorContent() {
               zones={impactZones}
               onLocationChange={handleLocationChange}
               showMarker={!results}
-              disableClick={!!results}
             />
           </div>
         </div>

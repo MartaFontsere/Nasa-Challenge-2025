@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ResultCard } from "./ResultCard";
 import type { ImpactResults } from "@/types/impact";
 
 interface ResultsPanelProps {
@@ -59,86 +58,112 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Basic Properties */}
-            <ResultCard
-              title="Asteroid Mass"
-              value={`${formatNumber(results.asteroidMass)} kg`}
-            />
-            <ResultCard
-              title="Kinetic Energy"
-              value={formatEnergy(results.kineticEnergy)}
-            />
-            <ResultCard
-              title="Impact Velocity"
-              value={`${results.impactVelocity} km/s`}
-            />
+            {/* TODO: Create a card component for this and reuse it for the other cards */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Asteroid Mass</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-slate-900">
+                  {formatNumber(results.asteroidMass)} kg
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="p-4 bg-white rounded-lg border border-slate-300 shadow-sm">
+              <p className="text-sm text-slate-600">Kinetic Energy</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {formatEnergy(results.kineticEnergy)}
+              </p>
+            </div>
+
+            <div className="p-4 bg-white rounded-lg border border-slate-300 shadow-sm">
+              <p className="text-sm text-slate-600">Impact Velocity</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {results.impactVelocity} km/s
+              </p>
+            </div>
 
             {/* Energy Comparisons */}
-            <ResultCard
-              title="TNT Equivalent"
-              value={`${formatNumber(results.tntEquivalent)} MT`}
-              variant="amber"
-            />
-            <ResultCard
-              title="Tsar Bomba Equivalent"
-              value={`${results.tsarBombaEquivalent.toFixed(1)}x`}
-              variant="amber"
-            />
-            <ResultCard
-              title="Impact Angle"
-              value={`${results.impactAngle}°`}
-              variant="amber"
-            />
+            <div className="p-4 bg-white rounded-lg border-2 border-amber-400 shadow-sm">
+              <p className="text-sm text-amber-700">TNT Equivalent</p>
+              <p className="text-2xl font-bold text-amber-900">
+                {formatNumber(results.tntEquivalent)} MT
+              </p>
+            </div>
+
+            <div className="p-4 bg-white rounded-lg border-2 border-amber-400 shadow-sm">
+              <p className="text-sm text-amber-700">Tsar Bomba Equivalent</p>
+              <p className="text-2xl font-bold text-amber-900">
+                {results.tsarBombaEquivalent.toFixed(1)}x
+              </p>
+            </div>
+
+            <div className="p-4 bg-white rounded-lg border-2 border-amber-400 shadow-sm">
+              <p className="text-sm text-amber-700">Impact Angle</p>
+              <p className="text-2xl font-bold text-amber-900">
+                {results.impactAngle}°
+              </p>
+            </div>
 
             {/* Crater Effects */}
-            <ResultCard
-              title="Crater Diameter"
-              value={
-                results.craterDiameter >= 1000
+            <div className="p-4 bg-white rounded-lg border-2 border-rose-400 shadow-sm">
+              <p className="text-sm text-rose-700">Crater Diameter</p>
+              <p className="text-2xl font-bold text-rose-900">
+                {results.craterDiameter >= 1000
                   ? `${(results.craterDiameter / 1000).toFixed(2)} km`
-                  : `${results.craterDiameter.toFixed(0)} m`
-              }
-              variant="rose"
-            />
-            <ResultCard
-              title="Crater Depth"
-              value={
-                results.craterDepth >= 1000
+                  : `${results.craterDiameter.toFixed(0)} m`}
+              </p>
+            </div>
+
+            <div className="p-4 bg-white rounded-lg border-2 border-rose-400 shadow-sm">
+              <p className="text-sm text-rose-700">Crater Depth</p>
+              <p className="text-2xl font-bold text-rose-900">
+                {results.craterDepth >= 1000
                   ? `${(results.craterDepth / 1000).toFixed(2)} km`
-                  : `${results.craterDepth.toFixed(0)} m`
-              }
-              variant="rose"
-            />
-            <ResultCard
-              title="Earthquake Magnitude"
-              value={results.earthquakeMagnitude.toFixed(1)}
-              variant="yellow"
-            />
+                  : `${results.craterDepth.toFixed(0)} m`}
+              </p>
+            </div>
+
+            <div className="p-4 bg-white rounded-lg border-2 border-yellow-400 shadow-sm">
+              <p className="text-sm text-yellow-700">Earthquake Magnitude</p>
+              <p className="text-2xl font-bold text-yellow-900">
+                {results.earthquakeMagnitude.toFixed(1)}
+              </p>
+            </div>
 
             {/* Blast Effects */}
-            <ResultCard
-              title="Fireball Radius"
-              value={`${results.fireballRadius.toFixed(2)} km`}
-              variant="rose"
-            />
-            <ResultCard
-              title="Shockwave Radius"
-              value={`${results.shockwaveRadius.toFixed(2)} km`}
-              variant="amber"
-            />
-            <ResultCard
-              title="Thermal Radiation Radius"
-              value={`${results.thermalRadiationRadius.toFixed(2)} km`}
-              variant="yellow"
-            />
+            <div className="p-4 bg-white rounded-lg border-2 border-red-400 shadow-sm">
+              <p className="text-sm text-red-700">Fireball Radius</p>
+              <p className="text-2xl font-bold text-red-900">
+                {results.fireballRadius.toFixed(2)} km
+              </p>
+            </div>
+
+            <div className="p-4 bg-white rounded-lg border-2 border-orange-400 shadow-sm">
+              <p className="text-sm text-orange-700">Shockwave Radius</p>
+              <p className="text-2xl font-bold text-orange-900">
+                {results.shockwaveRadius.toFixed(2)} km
+              </p>
+            </div>
+
+            <div className="p-4 bg-white rounded-lg border-2 border-yellow-400 shadow-sm">
+              <p className="text-sm text-yellow-700">
+                Thermal Radiation Radius
+              </p>
+              <p className="text-2xl font-bold text-yellow-900">
+                {results.thermalRadiationRadius.toFixed(2)} km
+              </p>
+            </div>
 
             {/* Tsunami */}
             {results.tsunamiHeight !== null && (
-              <ResultCard
-                title="Tsunami Height"
-                value={`${results.tsunamiHeight.toFixed(1)} m`}
-                variant="blue"
-              />
+              <div className="p-4 bg-white rounded-lg border-2 border-blue-400 shadow-sm">
+                <p className="text-sm text-blue-700">Tsunami Height</p>
+                <p className="text-2xl font-bold text-blue-900">
+                  {results.tsunamiHeight.toFixed(1)} m
+                </p>
+              </div>
             )}
           </div>
         </CardContent>

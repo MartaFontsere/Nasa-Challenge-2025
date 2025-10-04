@@ -11,7 +11,6 @@ interface ImpactMapProps {
   zones: ImpactZone[];
   onLocationChange: (location: ImpactLocation) => void;
   showMarker?: boolean;
-  disableClick?: boolean;
 }
 
 export function ImpactMap({
@@ -19,7 +18,6 @@ export function ImpactMap({
   zones,
   onLocationChange,
   showMarker = true,
-  disableClick = false,
 }: ImpactMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
@@ -46,15 +44,13 @@ export function ImpactMap({
         maxZoom: 19,
       }).addTo(map);
 
-      // Add click handler (only if not disabled)
-      if (!disableClick) {
-        map.on("click", (e: L.LeafletMouseEvent) => {
-          onLocationChange({
-            lat: e.latlng.lat,
-            lng: e.latlng.lng,
-          });
+      // Add click handler
+      map.on("click", (e: L.LeafletMouseEvent) => {
+        onLocationChange({
+          lat: e.latlng.lat,
+          lng: e.latlng.lng,
         });
-      }
+      });
 
       leafletMapRef.current = map;
     });
@@ -65,7 +61,7 @@ export function ImpactMap({
         leafletMapRef.current = null;
       }
     };
-  }, [disableClick, onLocationChange]);
+  }, []);
 
   // Update map center and marker when location changes
   useEffect(() => {
@@ -132,22 +128,15 @@ export function ImpactMap({
         // Find the crater zone specifically for zoom calculation
         const craterZone = zones.find((z) => z.type === "crater");
         if (craterZone) {
-          // Calculate bounds to show ONLY the crater prominently
-          // Use exactly the crater size plus small padding
-          const craterRadiusKm = craterZone.radius;
-
-          // Create bounds that will show the crater filling most of the screen
+          // Calculate bounds based on crater diameter to show it prominently
+          // Use 3x the crater radius to ensure good visibility
+          const viewRadius = Math.max(craterZone.radius * 3, 5); // Min 5km view
           const bounds = L.circle([location.lat, location.lng], {
-            radius: craterRadiusKm * 1000 * 1.5, // 1.5x crater radius for slight padding
+            radius: viewRadius * 1000,
           }).getBounds();
 
-          // Fit map to show only the crater
-          map.fitBounds(bounds, {
-            padding: [20, 20],
-            maxZoom: 18, // Allow closer zoom
-            animate: true,
-            duration: 1,
-          });
+          // Fit map to show the crater with good zoom
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
         }
       }
     });

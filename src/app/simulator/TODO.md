@@ -1,1 +1,2 @@
-✅ All tasks completed!
+- When clicking on calculate impact the the map is panned to the ceneter, but the zoom level is not adjused to show only the crater
+- Disable clicking on the map once the impact is calculated
