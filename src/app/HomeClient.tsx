@@ -15,7 +15,7 @@ export default function HomeClient({ asteroids }: HomeClientProps) {
     null
   );
   const [modalOpen, setModalOpen] = useState(false);
-  const [orbitSpeed, setOrbitSpeed] = useState(0.1);
+  const [orbitSpeed, setOrbitSpeed] = useState(1);
 
   const handleAsteroidSelect = (asteroid: Asteroid) => {
     setSelectedAsteroid(asteroid);
@@ -43,8 +43,8 @@ export default function HomeClient({ asteroids }: HomeClientProps) {
           <input
             type="range"
             min="0"
-            max="1"
-            step="0.1"
+            max="10"
+            step="any"
             value={orbitSpeed}
             onChange={(e) => setOrbitSpeed(Number.parseFloat(e.target.value))}
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
@@ -56,7 +56,7 @@ export default function HomeClient({ asteroids }: HomeClientProps) {
       <Scene
         asteroids={asteroids}
         onAsteroidSelect={handleAsteroidSelect}
-        orbitSpeed={orbitSpeed}
+        orbitSpeed={orbitSpeed / 10}
       />
 
       {/* Asteroid Modal */}
