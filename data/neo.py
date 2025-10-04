@@ -13,6 +13,28 @@ BROWSE_URL = "https://api.nasa.gov/neo/rest/v1/neo/browse"
 params = {"api_key": NASA_API_KEY}
 hazardous_data = []
 
+# Load CSV without headers
+url = 'https://sbnarchive.psi.edu/pds4/non_mission/neowise_diameters_albedos_V2_0/data/neowise_neos.csv'
+data = pd.read_csv(url, header=None)
+
+# Rename only the columns we need
+data.rename(columns={
+    0: 'designation',   # official designation
+    10: 'spec_type',    # spectral type
+    # 11: 'diameter',     # diameter in km?
+    13: 'albedo'        # geometric albedo
+}, inplace=True)
+
+# Convert designation to string and strip whitespace
+data['designation'] = data['designation'].astype(str).str.strip()
+
+# Density values in kg/m³
+density_dict = {
+    'C': 1500,  # carbonaceous
+    'S': 2700,  # silicaceous
+    'M': 5000   # metallic
+}
+
 def impact_energy_joules(diameter_m, velocity_km_s, density=3000):
     """Compute impact kinetic energy (Joules) for an asteroid."""
     radius = diameter_m / 2
@@ -34,7 +56,7 @@ def fetch_hazardous_neos(pages=1):
         neos = res.json().get("near_earth_objects", [])
         
         for neo in neos:
-            if neo.get("is_potentially_hazardous_asteroid", False):
+            if neo.get("is_potentially_hazardous_asteroid", True):
                 process_asteroid(neo)
 
 def get_earthquake_examples(mag, delta=0.3, max_delta=2.0):
@@ -78,11 +100,57 @@ def get_earthquake_examples(mag, delta=0.3, max_delta=2.0):
     else:
         return results
 
+# Function to fetch albedo for a specific asteroid
+def get_albedo(asteroid_designation):
+
+    # Load the NEOWISE dataset
+    # url = 'https://sbnarchive.psi.edu/pds4/non_mission/neowise_diameters_albedos_V2_0/data/neowise_neos.csv'
+    # data = pd.read_csv(url, skiprows=1)
+    # print(data.head)
+    # # Filter the dataset for the given asteroid
+    asteroid_data = data[data['designation'] == asteroid_designation]
+    
+    if not asteroid_data.empty:
+        # Extract the albedo value
+        albedo = float(asteroid_data['albedo'].values[0])
+        return albedo
+
+    return None
+
+def estimate_asteroid_properties(albedo, H):
+
+    # 5. Optionally check derived diameter from H
+    derived_diameter_km = 1329 / math.sqrt(albedo) * 10**(-H / 5)
+    D_m = derived_diameter_km * 1000
+    # 2. Estimate composition type and density
+    if albedo < 0.08:
+        asteroid_type = "C-type (carbonaceous)"
+        density = 1500  # kg/m³
+    elif albedo < 0.25:
+        asteroid_type = "S-type (silicaceous)"
+        density = 2700  # kg/m³
+    else:
+        asteroid_type = "M-type (metallic)"
+        density = 5500  # kg/m³
+    
+    # 3. Compute volume (sphere)
+    volume = (4/3) * math.pi * (D_m / 2)**3
+    
+    # 4. Compute mass
+    mass = volume * density  # in kg
+    
+    
+    
+    return asteroid_type, density, mass, derived_diameter_km
+
+
+
 def process_asteroid(neo):
     """Extract data for one hazardous asteroid."""
     name = neo["name"]
     neo_id = neo["id"]
-    diameter = neo["estimated_diameter"]["meters"]["estimated_diameter_max"]
+    diameter_max = neo["estimated_diameter"]["meters"]["estimated_diameter_max"]
+    diameter_min = neo["estimated_diameter"]["meters"]["estimated_diameter_min"]
 
     # Orbital elements
     orb = neo.get("orbital_data", {})
@@ -107,17 +175,29 @@ def process_asteroid(neo):
     # Determine if it's a "potential impact" (miss distance ≤ Earth radius)
     potential_impact = miss_km is not None and miss_km <= EARTH_RADIUS_KM
 
-    if velocity and diameter:
-        E = impact_energy_joules(diameter, velocity)
+    ####################
+    designation = neo["designation"]
+    albedo, H = None, None
+    H = neo["absolute_magnitude_h"]
+    if designation:
+        albedo = get_albedo(designation) 
+
+    composition, density, mass, diameter_m = estimate_asteroid_properties(albedo, H)
+    #####################
+
+    if velocity and diameter_m:
+        E = impact_energy_joules(diameter_m, velocity)
         Mw = energy_to_magnitude(E)
         examples = get_earthquake_examples(Mw)
     else:
         E, Mw, examples = None, None, None
 
+
     hazardous_data.append({
         "name": name,
         "id": neo_id,
-        "diameter_m": diameter,
+        # "diameter_max": diameter_max,
+        # "diameter_min": diameter_min,
         "a_AU": a,
         "e": e,
         "i_deg": i,
@@ -131,8 +211,16 @@ def process_asteroid(neo):
         "potential_impact": potential_impact,
         "impact_energy_J": E,
         "impact_magnitude_Mw": Mw,
+        "designation": designation,
+        "albedo": albedo,
+        "H": H,
+        "composition_type": composition,
+        "density": density, #kg per m3
+        "mass": mass, # kg
+        "diameter": diameter_m, # estimated from albedo from H
         "earthquake_examples": examples
     })
+
 
 # Run the process
 fetch_hazardous_neos(pages=1)
@@ -143,7 +231,9 @@ df = pd.DataFrame(hazardous_data)
 # df.to_json("hazardous_asteroids.json", orient="records", indent=2)
 
 print(f"\n✅ Total hazardous asteroids: {len(df)}")
-# print(hazardous_data[0])
+print(hazardous_data[0])
+# print(hazardous_data[1])
+# print(hazardous_data[2])
 print(f"🪐 Potential impacts (miss ≤ Earth radius): {df['potential_impact'].sum()}")
 # print("Data saved to: hazardous_asteroids.csv & hazardous_asteroids.json")
 
