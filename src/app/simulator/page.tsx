@@ -25,7 +25,7 @@ function SimulatorContent() {
   const asteroidId = searchParams?.get("asteroidId");
 
   const [selectedAsteroid, setSelectedAsteroid] = useState<Asteroid | null>(
-    null
+    null,
   );
   const [customAsteroid, setCustomAsteroid] = useState<CustomAsteroidInput>({
     diameter: 500,
@@ -67,7 +67,7 @@ function SimulatorContent() {
       const impactResults = calculateImpactEffects(
         customAsteroidObj,
         customAsteroid.angle,
-        location
+        location,
       );
       setResults(impactResults);
       setImpactZones(getImpactZones(impactResults));
@@ -76,7 +76,7 @@ function SimulatorContent() {
       const impactResults = calculateImpactEffects(
         selectedAsteroid,
         45,
-        location
+        location,
       );
       setResults(impactResults);
       setImpactZones(getImpactZones(impactResults));
@@ -153,6 +153,7 @@ function SimulatorContent() {
               zones={impactZones}
               onLocationChange={handleLocationChange}
               showMarker={!results}
+              disableClick={!!results}
             />
           </div>
         </div>

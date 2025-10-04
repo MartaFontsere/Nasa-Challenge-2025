@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ImpactLocation } from "@/types/asteroid";
 import type { ImpactZone } from "@/types/impact";
@@ -11,6 +11,7 @@ interface ImpactMapProps {
   zones: ImpactZone[];
   onLocationChange: (location: ImpactLocation) => void;
   showMarker?: boolean;
+  disableClick?: boolean;
 }
 
 export function ImpactMap({
@@ -18,11 +19,21 @@ export function ImpactMap({
   zones,
   onLocationChange,
   showMarker = true,
+  disableClick = false,
 }: ImpactMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
   const circlesRef = useRef<L.Circle[]>([]);
   const markerRef = useRef<L.Marker | null>(null);
+
+  // Store callbacks in refs to avoid re-initialization
+  const onLocationChangeRef = useRef(onLocationChange);
+  const disableClickRef = useRef(disableClick);
+
+  useEffect(() => {
+    onLocationChangeRef.current = onLocationChange;
+    disableClickRef.current = disableClick;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -46,10 +57,12 @@ export function ImpactMap({
 
       // Add click handler
       map.on("click", (e: L.LeafletMouseEvent) => {
-        onLocationChange({
-          lat: e.latlng.lat,
-          lng: e.latlng.lng,
-        });
+        if (!disableClickRef.current) {
+          onLocationChangeRef.current({
+            lat: e.latlng.lat,
+            lng: e.latlng.lng,
+          });
+        }
       });
 
       leafletMapRef.current = map;
@@ -128,15 +141,26 @@ export function ImpactMap({
         // Find the crater zone specifically for zoom calculation
         const craterZone = zones.find((z) => z.type === "crater");
         if (craterZone) {
-          // Calculate bounds based on crater diameter to show it prominently
-          // Use 3x the crater radius to ensure good visibility
-          const viewRadius = Math.max(craterZone.radius * 3, 5); // Min 5km view
-          const bounds = L.circle([location.lat, location.lng], {
-            radius: viewRadius * 1000,
-          }).getBounds();
+          // Calculate bounds to show ONLY the crater prominently
+          const craterRadiusKm = craterZone.radius;
+          const radiusForBounds = craterRadiusKm * 1.2; // 1.2x for minimal padding
 
-          // Fit map to show the crater with good zoom
-          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+          // Calculate bounds manually using Leaflet's LatLngBounds
+          // Convert radius from km to degrees (approximate)
+          const radiusInDegrees = radiusForBounds / 111; // 1 degree ≈ 111 km
+
+          const bounds = L.latLngBounds(
+            [location.lat - radiusInDegrees, location.lng - radiusInDegrees],
+            [location.lat + radiusInDegrees, location.lng + radiusInDegrees]
+          );
+
+          // Fit map to show only the crater
+          map.fitBounds(bounds, {
+            padding: [20, 20],
+            maxZoom: 18, // Allow closer zoom
+            animate: true,
+            duration: 1,
+          });
         }
       }
     });

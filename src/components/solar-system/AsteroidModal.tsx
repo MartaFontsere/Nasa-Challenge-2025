@@ -89,7 +89,7 @@ export function AsteroidModal({ asteroid, open, onClose }: AsteroidModalProps) {
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-slate-600 text-white hover:bg-slate-800"
+            className="border-slate-600 text-primary hover:bg-slate-800"
           >
             Close
           </Button>

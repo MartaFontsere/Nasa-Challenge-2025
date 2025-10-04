@@ -19,7 +19,7 @@ export function Navigation() {
         <div className="flex items-center gap-2">
           <Rocket className={`w-6 h-6 ${isHomePage ? "text-white" : ""}`} />
           <h1 className={`text-xl font-bold ${isHomePage ? "text-white" : ""}`}>
-            Asteroid Impact Simulator
+            Astro Shield
           </h1>
         </div>
         <div className="flex items-center gap-2">
