@@ -99,16 +99,19 @@ export async function fetchHazardousAsteroids(limit = 5): Promise<Asteroid[]> {
             neo.close_approach_data[0].relative_velocity.kilometers_per_second
           )
         : 20; // Default velocity if not available
-
+      
       const composition = estimateComposition(diameter, neo.name);
       const position = generatePosition(index, limit);
       const orbitRadius = 150 + index * 40;
+      
+      console.log('neo',neo)
 
       return {
         id: neo.id,
         name: neo.name,
         diameter,
         velocity,
+        orbitalData: neo.orbital_data,
         composition,
         description: `Near-Earth Object from NASA JPL Small-Body Database`,
         position,

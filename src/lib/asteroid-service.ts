@@ -17,7 +17,7 @@ export class AsteroidService {
     limit?: number;
   }): Promise<Asteroid[]> {
     // Return mock data if explicitly requested
-    return mockAsteroids;
+    // return mockAsteroids;
 
     if (options?.source === "mock") {
       return mockAsteroids;
