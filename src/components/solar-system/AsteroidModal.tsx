@@ -74,15 +74,6 @@ export function AsteroidModal({ asteroid, open, onClose }: AsteroidModalProps) {
               </div>
             </CardContent>
           </Card>
-
-          {asteroid.description && (
-            <Card className="bg-slate-800 border-slate-700">
-              <CardContent className="pt-6">
-                <p className="text-sm text-slate-400 mb-2">Description</p>
-                <p className="text-sm text-slate-200">{asteroid.description}</p>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         <DialogFooter>

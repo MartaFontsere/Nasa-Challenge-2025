@@ -6,7 +6,6 @@ export interface Asteroid {
   diameter: number; // meters
   velocity: number; // km/s
   composition: AsteroidComposition;
-  description?: string;
   // 3D position for solar system view
   position?: {
     x: number;

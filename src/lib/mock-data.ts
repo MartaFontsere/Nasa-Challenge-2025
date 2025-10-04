@@ -13,8 +13,6 @@ export const mockAsteroids: Asteroid[] = [
     diameter: 370, // meters
     velocity: 12.6, // km/s
     composition: "rocky",
-    description:
-      "Near-Earth asteroid that will make a close approach to Earth in 2029",
     position: { x: 150, y: 0, z: 80 },
     orbitRadius: 170,
     color: "#D4A574", // Brighter sandy brown
@@ -25,8 +23,6 @@ export const mockAsteroids: Asteroid[] = [
     diameter: 490, // meters
     velocity: 27.7, // km/s
     composition: "rocky",
-    description:
-      "Potentially hazardous asteroid and target of NASA's OSIRIS-REx mission",
     position: { x: -120, y: 20, z: -90 },
     orbitRadius: 150,
     color: "#B8967D", // Brighter tan
@@ -37,7 +33,6 @@ export const mockAsteroids: Asteroid[] = [
     diameter: 16700, // meters (16.7 km)
     velocity: 22.4, // km/s
     composition: "rocky",
-    description: "First near-Earth asteroid to be visited by a spacecraft",
     position: { x: 200, y: -30, z: 150 },
     orbitRadius: 250,
     color: "#C9A882", // Brighter beige
@@ -48,7 +43,6 @@ export const mockAsteroids: Asteroid[] = [
     diameter: 330, // meters
     velocity: 19.8, // km/s
     composition: "rocky",
-    description: "Peanut-shaped asteroid visited by Japan's Hayabusa mission",
     position: { x: -80, y: 15, z: 120 },
     orbitRadius: 145,
     color: "#D4B896", // Brighter wheat
@@ -59,8 +53,6 @@ export const mockAsteroids: Asteroid[] = [
     diameter: 226000, // meters (226 km)
     velocity: 17.5, // km/s
     composition: "metallic",
-    description:
-      "Metal-rich asteroid, possibly the exposed core of a protoplanet",
     position: { x: 280, y: 50, z: -200 },
     orbitRadius: 350,
     color: "#E8E8E8", // Brighter silver
@@ -71,7 +63,6 @@ export const mockAsteroids: Asteroid[] = [
     diameter: 939000, // meters (939 km)
     velocity: 17.9, // km/s
     composition: "icy",
-    description: "Dwarf planet and largest object in the asteroid belt",
     position: { x: -300, y: -40, z: 250 },
     orbitRadius: 390,
     color: "#F0F0F0", // Brighter light gray
