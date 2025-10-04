@@ -12,9 +12,7 @@ export function Navigation() {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 border-b ${
-        isHomePage
-          ? "bg-black/80 border-slate-700 backdrop-blur"
-          : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        isHomePage ? "bg-black/80 border-slate-700 backdrop-blur" : "bg-white"
       }`}
     >
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -30,7 +28,9 @@ export function Navigation() {
               variant={pathname === "/" ? "default" : "ghost"}
               size="sm"
               className={
-                isHomePage
+                isHomePage && pathname === "/"
+                  ? "bg-white text-black hover:bg-gray-200"
+                  : isHomePage
                   ? "text-white hover:bg-slate-800 hover:text-white"
                   : ""
               }

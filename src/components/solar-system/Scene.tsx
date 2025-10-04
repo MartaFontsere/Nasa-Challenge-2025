@@ -107,7 +107,7 @@ function OrbitLine({ radius }: { radius: number }) {
   for (let i = 0; i <= segments; i++) {
     const angle = (i / segments) * Math.PI * 2;
     points.push(
-      new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
+      new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius),
     );
   }
 
@@ -142,7 +142,7 @@ function AsteroidOrbitLine({
       groupRef.current.position.set(
         earthPositionRef.current.x,
         yOffset,
-        earthPositionRef.current.z
+        earthPositionRef.current.z,
       );
     }
   });
@@ -192,7 +192,7 @@ function CameraController({
 export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
   const earthPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const [hoveredAsteroidId, setHoveredAsteroidId] = useState<string | null>(
-    null
+    null,
   );
   const [earthHovered, setEarthHovered] = useState(false);
 
