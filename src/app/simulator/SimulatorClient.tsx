@@ -56,34 +56,39 @@ function SimulatorContentInner({ asteroids }: SimulatorClientProps) {
     }
   }, [asteroidId, asteroids]);
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     if (!locationSelected) return;
 
-    if (useCustom) {
-      // Create a temporary asteroid object from custom inputs
-      const customAsteroidObj: Asteroid = {
-        id: "custom",
-        name: "Custom Asteroid",
-        diameter: customAsteroid.diameter,
-        velocity: customAsteroid.velocity,
-        composition: customAsteroid.composition,
-      };
-      const impactResults = calculateImpactEffects(
-        customAsteroidObj,
-        customAsteroid.angle,
-        location
-      );
-      setResults(impactResults);
-      setImpactZones(getImpactZones(impactResults));
-    } else if (selectedAsteroid) {
-      // Use a default impact angle of 45 degrees for preset asteroids
-      const impactResults = calculateImpactEffects(
-        selectedAsteroid,
-        45,
-        location
-      );
-      setResults(impactResults);
-      setImpactZones(getImpactZones(impactResults));
+    try {
+      if (useCustom) {
+        // Create a temporary asteroid object from custom inputs
+        const customAsteroidObj: Asteroid = {
+          id: "custom",
+          name: "Custom Asteroid",
+          diameter: customAsteroid.diameter,
+          velocity: customAsteroid.velocity,
+          composition: customAsteroid.composition,
+        };
+        const impactResults = await calculateImpactEffects(
+          customAsteroidObj,
+          customAsteroid.angle,
+          location
+        );
+        setResults(impactResults);
+        setImpactZones(getImpactZones(impactResults));
+      } else if (selectedAsteroid) {
+        // Use a default impact angle of 45 degrees for preset asteroids
+        const impactResults = await calculateImpactEffects(
+          selectedAsteroid,
+          45,
+          location
+        );
+        setResults(impactResults);
+        setImpactZones(getImpactZones(impactResults));
+      }
+    } catch (error) {
+      console.error("Error calculating impact:", error);
+      // You could add error state handling here
     }
   };
 

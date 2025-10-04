@@ -123,14 +123,19 @@ export function ImpactMap({
       }
       circlesRef.current = [];
 
-      // Add new circles (in reverse order so smallest is on top)
-      if (zones.length > 0) {
-        for (const zone of [...zones].reverse()) {
+      // Sort zones by radius (largest first) so they're drawn in correct order
+      // Larger circles drawn first, smaller on top for proper stacking
+      const sortedZones = [...zones].sort((a, b) => b.radius - a.radius);
+
+      // Add new circles (largest to smallest so smallest is on top and clickable)
+      if (sortedZones.length > 0) {
+        for (const zone of sortedZones) {
           const circle = L.circle([location.lat, location.lng], {
             color: zone.color,
             fillColor: zone.color,
             fillOpacity: 0.2,
             radius: zone.radius * 1000, // Convert km to meters
+            weight: 2,
           })
             .addTo(map)
             .bindPopup(zone.label);

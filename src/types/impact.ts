@@ -27,11 +27,13 @@ export interface ImpactResults {
     thermalRadiation: number;
     tsunami: number | null; // null if not ocean impact
     total: number;
+    populationDensity: number; // people per km²
   };
 
   // Additional data
   impactAngle: number; // degrees
   impactVelocity: number; // km/s
+  isOceanImpact: boolean; // whether the impact is in ocean
 }
 
 export interface ImpactZone {

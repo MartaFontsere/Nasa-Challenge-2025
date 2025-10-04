@@ -123,8 +123,14 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
               value={`${results.thermalRadiationRadius.toFixed(2)} km`}
             />
 
-            {/* Tsunami */}
-            {results.tsunamiHeight !== null && (
+            {/* Ocean Impact Indicator */}
+            <ResultCard
+              title="Impact Location"
+              value={results.isOceanImpact ? "Ocean" : "Land"}
+            />
+
+            {/* Tsunami - only for ocean impacts */}
+            {results.isOceanImpact && results.tsunamiHeight !== null && (
               <ResultCard
                 title="Tsunami Height"
                 value={`${results.tsunamiHeight.toFixed(1)} m`}
@@ -139,7 +145,8 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
         <CardHeader>
           <CardTitle>Estimated Casualties</CardTitle>
           <CardDescription>
-            Based on urban population density (rough estimates)
+            Based on location-specific population density:{" "}
+            {results.casualties.populationDensity.toLocaleString()} people/km²
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -156,7 +163,7 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
               title="Thermal Zone"
               value={formatNumber(results.casualties.thermalRadiation, 0)}
             />
-            {results.casualties.tsunami !== null && (
+            {results.isOceanImpact && results.casualties.tsunami !== null && (
               <ResultCard
                 title="Tsunami Zone"
                 value={formatNumber(results.casualties.tsunami, 0)}
@@ -167,19 +174,6 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
               value={formatNumber(results.casualties.total, 0)}
             />
           </div>
-
-          <p className="text-sm text-muted-foreground mt-4">
-            ⚠️ These are rough estimates based on urban population density.
-            Actual casualties depend on local population distribution, building
-            infrastructure, and warning time.
-            {results.casualties.tsunami !== null && (
-              <span className="block mt-1">
-                🌊 Tsunami casualties are prototype estimates for coastal areas
-                and don't account for specific geographic features or
-                evacuation.
-              </span>
-            )}
-          </p>
         </CardContent>
       </Card>
     </div>
