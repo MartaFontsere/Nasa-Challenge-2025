@@ -17,7 +17,7 @@ export const mockAsteroids: Asteroid[] = [
       "Near-Earth asteroid that will make a close approach to Earth in 2029",
     position: { x: 150, y: 0, z: 80 },
     orbitRadius: 170,
-    color: "#8B7355",
+    color: "#D4A574", // Brighter sandy brown
   },
   {
     id: "101955",
@@ -29,7 +29,7 @@ export const mockAsteroids: Asteroid[] = [
       "Potentially hazardous asteroid and target of NASA's OSIRIS-REx mission",
     position: { x: -120, y: 20, z: -90 },
     orbitRadius: 150,
-    color: "#6B5D52",
+    color: "#B8967D", // Brighter tan
   },
   {
     id: "433",
@@ -40,7 +40,7 @@ export const mockAsteroids: Asteroid[] = [
     description: "First near-Earth asteroid to be visited by a spacecraft",
     position: { x: 200, y: -30, z: 150 },
     orbitRadius: 250,
-    color: "#9D8B7A",
+    color: "#C9A882", // Brighter beige
   },
   {
     id: "25143",
@@ -51,7 +51,7 @@ export const mockAsteroids: Asteroid[] = [
     description: "Peanut-shaped asteroid visited by Japan's Hayabusa mission",
     position: { x: -80, y: 15, z: 120 },
     orbitRadius: 145,
-    color: "#A89582",
+    color: "#D4B896", // Brighter wheat
   },
   {
     id: "16",
@@ -63,7 +63,7 @@ export const mockAsteroids: Asteroid[] = [
       "Metal-rich asteroid, possibly the exposed core of a protoplanet",
     position: { x: 280, y: 50, z: -200 },
     orbitRadius: 350,
-    color: "#C0C0C0",
+    color: "#E8E8E8", // Brighter silver
   },
   {
     id: "1",
@@ -74,7 +74,7 @@ export const mockAsteroids: Asteroid[] = [
     description: "Dwarf planet and largest object in the asteroid belt",
     position: { x: -300, y: -40, z: 250 },
     orbitRadius: 390,
-    color: "#D3D3D3",
+    color: "#F0F0F0", // Brighter light gray
   },
 ];
 
@@ -86,14 +86,3 @@ export const BARCELONA_COORDS = {
   lng: 2.1686,
   name: "Barcelona, Spain",
 };
-
-/**
- * Other notable locations for testing
- */
-export const NOTABLE_LOCATIONS = [
-  { lat: 40.7128, lng: -74.006, name: "New York, USA" },
-  { lat: 35.6762, lng: 139.6503, name: "Tokyo, Japan" },
-  { lat: 51.5074, lng: -0.1278, name: "London, UK" },
-  { lat: -33.8688, lng: 151.2093, name: "Sydney, Australia" },
-  { lat: 41.3874, lng: 2.1686, name: "Barcelona, Spain" },
-];

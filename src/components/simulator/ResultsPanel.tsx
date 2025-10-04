@@ -59,66 +59,52 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Basic Properties */}
-            <div className="p-4 bg-white rounded-lg border border-slate-300">
-              <p className="text-sm text-slate-600">
-                Asteroid Mass
-              </p>
+            <div className="p-4 bg-white rounded-lg border border-slate-300 shadow-sm">
+              <p className="text-sm text-slate-600">Asteroid Mass</p>
               <p className="text-2xl font-bold text-slate-900">
                 {formatNumber(results.asteroidMass)} kg
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border border-slate-300">
-              <p className="text-sm text-slate-600">
-                Kinetic Energy
-              </p>
+            <div className="p-4 bg-white rounded-lg border border-slate-300 shadow-sm">
+              <p className="text-sm text-slate-600">Kinetic Energy</p>
               <p className="text-2xl font-bold text-slate-900">
                 {formatEnergy(results.kineticEnergy)}
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border border-slate-300">
-              <p className="text-sm text-slate-600">
-                Impact Velocity
-              </p>
+            <div className="p-4 bg-white rounded-lg border border-slate-300 shadow-sm">
+              <p className="text-sm text-slate-600">Impact Velocity</p>
               <p className="text-2xl font-bold text-slate-900">
                 {results.impactVelocity} km/s
               </p>
             </div>
 
             {/* Energy Comparisons */}
-            <div className="p-4 bg-white rounded-lg border-2 border-amber-400">
-              <p className="text-sm text-amber-700">
-                TNT Equivalent
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-amber-400 shadow-sm">
+              <p className="text-sm text-amber-700">TNT Equivalent</p>
               <p className="text-2xl font-bold text-amber-900">
                 {formatNumber(results.tntEquivalent)} MT
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border-2 border-amber-400">
-              <p className="text-sm text-amber-700">
-                Tsar Bomba Equivalent
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-amber-400 shadow-sm">
+              <p className="text-sm text-amber-700">Tsar Bomba Equivalent</p>
               <p className="text-2xl font-bold text-amber-900">
                 {results.tsarBombaEquivalent.toFixed(1)}x
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border-2 border-amber-400">
-              <p className="text-sm text-amber-700">
-                Impact Angle
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-amber-400 shadow-sm">
+              <p className="text-sm text-amber-700">Impact Angle</p>
               <p className="text-2xl font-bold text-amber-900">
                 {results.impactAngle}°
               </p>
             </div>
 
             {/* Crater Effects */}
-            <div className="p-4 bg-white rounded-lg border-2 border-rose-400">
-              <p className="text-sm text-rose-700">
-                Crater Diameter
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-rose-400 shadow-sm">
+              <p className="text-sm text-rose-700">Crater Diameter</p>
               <p className="text-2xl font-bold text-rose-900">
                 {results.craterDiameter >= 1000
                   ? `${(results.craterDiameter / 1000).toFixed(2)} km`
@@ -126,10 +112,8 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border-2 border-rose-400">
-              <p className="text-sm text-rose-700">
-                Crater Depth
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-rose-400 shadow-sm">
+              <p className="text-sm text-rose-700">Crater Depth</p>
               <p className="text-2xl font-bold text-rose-900">
                 {results.craterDepth >= 1000
                   ? `${(results.craterDepth / 1000).toFixed(2)} km`
@@ -137,35 +121,29 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border-2 border-yellow-400">
-              <p className="text-sm text-yellow-700">
-                Earthquake Magnitude
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-yellow-400 shadow-sm">
+              <p className="text-sm text-yellow-700">Earthquake Magnitude</p>
               <p className="text-2xl font-bold text-yellow-900">
                 {results.earthquakeMagnitude.toFixed(1)}
               </p>
             </div>
 
             {/* Blast Effects */}
-            <div className="p-4 bg-white rounded-lg border-2 border-red-400">
-              <p className="text-sm text-red-700">
-                Fireball Radius
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-red-400 shadow-sm">
+              <p className="text-sm text-red-700">Fireball Radius</p>
               <p className="text-2xl font-bold text-red-900">
                 {results.fireballRadius.toFixed(2)} km
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border-2 border-orange-400">
-              <p className="text-sm text-orange-700">
-                Shockwave Radius
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-orange-400 shadow-sm">
+              <p className="text-sm text-orange-700">Shockwave Radius</p>
               <p className="text-2xl font-bold text-orange-900">
                 {results.shockwaveRadius.toFixed(2)} km
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border-2 border-yellow-400">
+            <div className="p-4 bg-white rounded-lg border-2 border-yellow-400 shadow-sm">
               <p className="text-sm text-yellow-700">
                 Thermal Radiation Radius
               </p>
@@ -176,10 +154,8 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
 
             {/* Tsunami */}
             {results.tsunamiHeight !== null && (
-              <div className="p-4 bg-white rounded-lg border-2 border-blue-400">
-                <p className="text-sm text-blue-700">
-                  Tsunami Height
-                </p>
+              <div className="p-4 bg-white rounded-lg border-2 border-blue-400 shadow-sm">
+                <p className="text-sm text-blue-700">Tsunami Height</p>
                 <p className="text-2xl font-bold text-blue-900">
                   {results.tsunamiHeight.toFixed(1)} m
                 </p>
@@ -199,28 +175,22 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 bg-white rounded-lg border-2 border-red-400">
-              <p className="text-sm text-red-700">
-                Fireball Zone
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-red-400 shadow-sm">
+              <p className="text-sm text-red-700">Fireball Zone</p>
               <p className="text-2xl font-bold text-red-900">
                 {formatNumber(results.casualties.fireball, 0)}
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border-2 border-orange-400">
-              <p className="text-sm text-orange-700">
-                Shockwave Zone
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-orange-400 shadow-sm">
+              <p className="text-sm text-orange-700">Shockwave Zone</p>
               <p className="text-2xl font-bold text-orange-900">
                 {formatNumber(results.casualties.shockwave, 0)}
               </p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border-2 border-yellow-400">
-              <p className="text-sm text-yellow-700">
-                Thermal Zone
-              </p>
+            <div className="p-4 bg-white rounded-lg border-2 border-yellow-400 shadow-sm">
+              <p className="text-sm text-yellow-700">Thermal Zone</p>
               <p className="text-2xl font-bold text-yellow-900">
                 {formatNumber(results.casualties.thermalRadiation, 0)}
               </p>

@@ -12,7 +12,7 @@ export default function Home() {
     null,
   );
   const [modalOpen, setModalOpen] = useState(false);
-  const [orbitSpeed, setOrbitSpeed] = useState(0.2);
+  const [orbitSpeed, setOrbitSpeed] = useState(0.1);
 
   const handleAsteroidSelect = (asteroid: Asteroid) => {
     setSelectedAsteroid(asteroid);

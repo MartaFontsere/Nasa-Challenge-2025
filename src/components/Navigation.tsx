@@ -30,11 +30,9 @@ export function Navigation() {
               variant={pathname === "/" ? "default" : "ghost"}
               size="sm"
               className={
-                isHomePage && pathname !== "/"
+                isHomePage
                   ? "text-white hover:bg-slate-800 hover:text-white"
-                  : isHomePage
-                    ? ""
-                    : ""
+                  : ""
               }
             >
               <Globe className="w-4 h-4 mr-2" />

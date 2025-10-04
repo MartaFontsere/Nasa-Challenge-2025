@@ -44,7 +44,7 @@ function getDensity(composition: AsteroidComposition): number {
  */
 export function calculateMass(
   diameter: number,
-  composition: AsteroidComposition
+  composition: AsteroidComposition,
 ): number {
   const radius = diameter / 2;
   const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
@@ -82,7 +82,7 @@ export function joulesToTNTMegatons(joules: number): number {
 export function calculateCraterDiameter(
   energy: number,
   angle: number,
-  composition: AsteroidComposition
+  composition: AsteroidComposition,
 ): number {
   const energyMegatons = joulesToTNTMegatons(energy);
 
@@ -164,7 +164,7 @@ export function calculateEarthquakeMagnitude(energy: number): number {
  */
 export function calculateTsunamiHeight(
   craterDiameter: number,
-  isOceanImpact: boolean
+  isOceanImpact: boolean,
 ): number | null {
   if (!isOceanImpact) return null;
 
@@ -184,7 +184,7 @@ export function estimateCasualties(
   fireballRadius: number,
   shockwaveRadius: number,
   thermalRadius: number,
-  populationDensity: number = POPULATION_DENSITY_URBAN
+  populationDensity: number = POPULATION_DENSITY_URBAN,
 ): {
   fireball: number;
   shockwave: number;
@@ -200,7 +200,7 @@ export function estimateCasualties(
   // Casualties (100% in fireball, 80% in shockwave, 30% in thermal)
   const fireballCasualties = Math.floor(fireballArea * populationDensity * 1.0);
   const shockwaveCasualties = Math.floor(
-    shockwaveArea * populationDensity * 0.8
+    shockwaveArea * populationDensity * 0.8,
   );
   const thermalCasualties = Math.floor(thermalArea * populationDensity * 0.3);
 
@@ -219,9 +219,9 @@ export function estimateCasualties(
  * https://nominatim.openstreetmap.org/
  */
 export function isOceanImpact(lat: number, lng: number): boolean {
-  // Placeholder logic - in reality, use a geography API or dataset
-  // For now, we'll return false to simulate land impacts
-  return false;
+  // Hardcoded to true for demonstration purposes
+  // In production, use a geography API or dataset
+  return true;
 }
 
 /**
@@ -230,7 +230,7 @@ export function isOceanImpact(lat: number, lng: number): boolean {
 export function calculateImpactEffects(
   asteroid: Asteroid,
   angle: number,
-  location: { lat: number; lng: number }
+  location: { lat: number; lng: number },
 ): ImpactResults {
   // Calculate basic properties
   const mass = calculateMass(asteroid.diameter, asteroid.composition);
@@ -240,7 +240,7 @@ export function calculateImpactEffects(
   const craterDiameter = calculateCraterDiameter(
     energy,
     angle,
-    asteroid.composition
+    asteroid.composition,
   );
   const craterDepth = calculateCraterDepth(craterDiameter);
 
@@ -258,7 +258,7 @@ export function calculateImpactEffects(
   const casualties = estimateCasualties(
     fireballRadius,
     shockwaveRadius,
-    thermalRadius
+    thermalRadius,
   );
 
   // Energy comparisons
@@ -304,14 +304,14 @@ export function getImpactZones(results: ImpactResults): ImpactZone[] {
     {
       type: "thermal",
       radius: results.thermalRadiationRadius,
-      color: "#ffff00",
+      color: "#ffa500",
       label: `Thermal Radiation (${results.casualties.thermalRadiation.toLocaleString()} casualties)`,
       casualties: results.casualties.thermalRadiation,
     },
     {
       type: "shockwave",
       radius: results.shockwaveRadius,
-      color: "#ffa500",
+      color: "#ffff00",
       label: `Shockwave (${results.casualties.shockwave.toLocaleString()} casualties)`,
       casualties: results.casualties.shockwave,
     },
