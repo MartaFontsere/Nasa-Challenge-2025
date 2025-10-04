@@ -20,6 +20,7 @@ export function ImpactMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
   const circlesRef = useRef<L.Circle[]>([]);
+  const markerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,7 +32,7 @@ export function ImpactMap({
       // Initialize map
       const map = L.map(mapRef.current).setView(
         [location.lat, location.lng],
-        10
+        10,
       );
 
       // Add OpenStreetMap tiles
@@ -60,14 +61,35 @@ export function ImpactMap({
     };
   }, []);
 
-  // Update map center when location changes
+  // Update map center and marker when location changes
   useEffect(() => {
-    if (leafletMapRef.current) {
-      leafletMapRef.current.setView(
-        [location.lat, location.lng],
-        leafletMapRef.current.getZoom()
-      );
-    }
+    const map = leafletMapRef.current;
+    if (!map) return;
+
+    map.setView([location.lat, location.lng], map.getZoom());
+
+    // Update or create marker
+    import("leaflet").then((L) => {
+      // Remove existing marker
+      if (markerRef.current) {
+        markerRef.current.remove();
+      }
+
+      // Create custom icon for impact location
+      const icon = L.divIcon({
+        className: "custom-marker",
+        html: `<div style="background: red; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+
+      // Add new marker
+      const marker = L.marker([location.lat, location.lng], { icon })
+        .addTo(map)
+        .bindPopup("Impact Location");
+
+      markerRef.current = marker;
+    });
   }, [location.lat, location.lng]);
 
   // Update impact zones
@@ -103,15 +125,35 @@ export function ImpactMap({
       <CardHeader>
         <CardTitle>Impact Map</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <div
           ref={mapRef}
           className="w-full h-[500px] rounded-lg overflow-hidden"
           style={{ zIndex: 0 }}
         />
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="text-xs text-muted-foreground">
           Click anywhere on the map to set the impact location
         </p>
+
+        {/* Legend */}
+        {zones.length > 0 && (
+          <div className="p-4 bg-muted rounded-lg">
+            <h4 className="font-semibold text-sm mb-3">Impact Zone Legend</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {zones.map((zone) => (
+                <div key={zone.type} className="flex items-center gap-2">
+                  <div
+                    className="w-4 h-4 rounded-full border-2 border-white"
+                    style={{ backgroundColor: zone.color }}
+                  />
+                  <span className="text-xs font-medium capitalize">
+                    {zone.type}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -2,12 +2,12 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AsteroidSelector } from "@/components/simulator/AsteroidSelector";
 import { LocationPicker } from "@/components/simulator/LocationPicker";
 import { ImpactMap } from "@/components/simulator/ImpactMap";
 import { ResultsPanel } from "@/components/simulator/ResultsPanel";
+import { Navigation } from "@/components/Navigation";
 import { mockAsteroids, BARCELONA_COORDS } from "@/lib/mock-data";
 import {
   calculateImpactEffects,
@@ -19,14 +19,13 @@ import type {
   ImpactLocation,
 } from "@/types/asteroid";
 import type { ImpactResults, ImpactZone } from "@/types/impact";
-import { ArrowLeft } from "lucide-react";
 
 function SimulatorContent() {
   const searchParams = useSearchParams();
   const asteroidId = searchParams?.get("asteroidId");
 
   const [selectedAsteroid, setSelectedAsteroid] = useState<Asteroid | null>(
-    null
+    null,
   );
   const [customAsteroid, setCustomAsteroid] = useState<CustomAsteroidInput>({
     diameter: 500,
@@ -65,7 +64,7 @@ function SimulatorContent() {
       const impactResults = calculateImpactEffects(
         customAsteroidObj,
         customAsteroid.angle,
-        location
+        location,
       );
       setResults(impactResults);
       setImpactZones(getImpactZones(impactResults));
@@ -74,7 +73,7 @@ function SimulatorContent() {
       const impactResults = calculateImpactEffects(
         selectedAsteroid,
         45,
-        location
+        location,
       );
       setResults(impactResults);
       setImpactZones(getImpactZones(impactResults));
@@ -83,28 +82,11 @@ function SimulatorContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Solar System
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold">Impact Simulator</h1>
-              <p className="text-sm text-muted-foreground">
-                Configure asteroid parameters and target location
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Navigation */}
+      <Navigation />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 mt-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Configuration */}
           <div className="space-y-6">

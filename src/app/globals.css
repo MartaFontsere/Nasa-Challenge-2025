@@ -49,16 +49,36 @@
 }
 
 @layer base {
-	* {
-		border-color: hsl(var(--border));
-	}
-	body {
-		background-color: hsl(var(--background));
-		color: hsl(var(--foreground));
-		font-feature-settings:
-			"rlig" 1,
-			"calt" 1;
-	}
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+}
+
+/* Range Slider Styling */
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 2px solid #4b5563;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 2px solid #4b5563;
 }
 
 /* Leaflet CSS overrides to avoid import issues */

@@ -302,18 +302,18 @@ export function getImpactZones(results: ImpactResults): ImpactZone[] {
       casualties: results.casualties.fireball,
     },
     {
-      type: "shockwave",
-      radius: results.shockwaveRadius,
-      color: "#ffa500",
-      label: `Shockwave (${results.casualties.shockwave.toLocaleString()} casualties)`,
-      casualties: results.casualties.shockwave,
-    },
-    {
       type: "thermal",
       radius: results.thermalRadiationRadius,
       color: "#ffff00",
       label: `Thermal Radiation (${results.casualties.thermalRadiation.toLocaleString()} casualties)`,
       casualties: results.casualties.thermalRadiation,
+    },
+    {
+      type: "shockwave",
+      radius: results.shockwaveRadius,
+      color: "#ffa500",
+      label: `Shockwave (${results.casualties.shockwave.toLocaleString()} casualties)`,
+      casualties: results.casualties.shockwave,
     },
   ];
 }
