@@ -24,16 +24,11 @@ function Sun() {
   });
 
   return (
-    // <mesh ref={sunRef}>
-    //   <sphereGeometry args={[20, 32, 32]} />
-    //   <SunMaterial />
-    // </mesh>
     <group ref={sunRef} position={[-200, 0, 0]}>
       {/* Sun core */}
       <mesh>
         <sphereGeometry args={[20, 32, 32]} />
-        {/* <SunMaterial /> */}
-        <meshBasicMaterial color="#FDB813" />
+        <SunMaterial />
       </mesh>
       {/* Glow effect */}
       <mesh>
@@ -54,15 +49,6 @@ function Sun() {
 function SunMaterial() {
   // ✅ Load texture with proper Suspense handling
   const suncolorMap = useTexture("/textures/sun/sun_texture_2k.jpg");
-
-  // ✅ Dispose texture on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (suncolorMap) {
-        suncolorMap.dispose();
-      }
-    };
-  }, [suncolorMap]);
 
   return (
     <meshStandardMaterial
@@ -280,7 +266,9 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
         <hemisphereLight args={["#e7f8ff", "#101020", 0.12]} />
 
         {/* Keep your Sun visual (stationary) */}
-        <Sun />
+        <Suspense fallback={null}>
+          <Sun />
+        </Suspense>
 
         {/* Directional "sunlight" that always points at Earth */}
         <SunDirectionalLight
