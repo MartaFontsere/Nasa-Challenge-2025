@@ -1,5 +1,0 @@
-- Redesign UI
-- Think filtering UI
-- Review calculations
-- Implement tsunami calculations
-- Add Earth defense
