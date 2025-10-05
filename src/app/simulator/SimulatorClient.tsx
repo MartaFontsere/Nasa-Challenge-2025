@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AsteroidSelector } from "@/components/simulator/AsteroidSelector";
 import { ImpactMap } from "@/components/simulator/ImpactMap";
 import { ResultsPanel } from "@/components/simulator/ResultsPanel";
+import { DefenseModal } from "@/components/defense/DefenseModal";
 import { Navigation } from "@/components/Navigation";
 import { BARCELONA_COORDS } from "@/lib/mock-data";
 import {
@@ -18,7 +19,7 @@ import type {
   ImpactLocation,
 } from "@/types/asteroid";
 import type { ImpactResults, ImpactZone } from "@/types/impact";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Shield } from "lucide-react";
 
 interface SimulatorClientProps {
   asteroids: Asteroid[];
@@ -42,6 +43,7 @@ function SimulatorContentInner({ asteroids }: SimulatorClientProps) {
   const [results, setResults] = useState<ImpactResults | null>(null);
   const [impactZones, setImpactZones] = useState<ImpactZone[]>([]);
   const [useCustom, setUseCustom] = useState(false);
+  const [defenseModalOpen, setDefenseModalOpen] = useState(false);
 
   // Load asteroid from URL parameter or default to first one
   useEffect(() => {
@@ -138,15 +140,27 @@ function SimulatorContentInner({ asteroids }: SimulatorClientProps) {
                 Calculate Impact
               </Button>
               {results && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleReset}
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  New Impact
-                </Button>
+                <>
+                  <Button
+                    size="lg"
+                    variant="default"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() => setDefenseModalOpen(true)}
+                    disabled={!selectedAsteroid && !useCustom}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Defense Mode
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleReset}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    New Impact
+                  </Button>
+                </>
               )}
               {!locationSelected && (
                 <p className="text-xs text-center text-muted-foreground">
@@ -173,6 +187,25 @@ function SimulatorContentInner({ asteroids }: SimulatorClientProps) {
           <ResultsPanel results={results} />
         </div>
       </main>
+
+      {/* Defense Modal */}
+      {(selectedAsteroid || useCustom) && (
+        <DefenseModal
+          open={defenseModalOpen}
+          onOpenChange={setDefenseModalOpen}
+          asteroid={
+            useCustom
+              ? {
+                  id: "custom",
+                  name: "Custom Asteroid",
+                  diameter: customAsteroid.diameter,
+                  velocity: customAsteroid.velocity,
+                  composition: customAsteroid.composition,
+                }
+              : selectedAsteroid!
+          }
+        />
+      )}
 
       {/* Footer */}
       <footer className="border-t mt-12 py-6">
