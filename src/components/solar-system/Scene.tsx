@@ -1,19 +1,11 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, Line } from "@react-three/drei";
+import { OrbitControls, Stars, Line, useTexture } from "@react-three/drei";
 import { AsteroidObject } from "./AsteroidObject";
 import type { Asteroid } from "@/types/asteroid";
 import * as THREE from "three";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { useTexture } from "@react-three/drei";
-
-
-// inside <Canvas>
-{/* <EffectComposer>
-  <Bloom luminanceThreshold={0.2} intensity={0.8} />
-</EffectComposer> */}
 
 interface SceneProps {
   asteroids: Asteroid[];
@@ -68,9 +60,6 @@ export function Earth({
   const earthOrbitRadius = 150;
   const sunPosition = new THREE.Vector3(-200, 0, 0);
 
-  // ✅ Load a single 1K texture (small memory footprint)
-  const colorMap = useTexture("/textures/earth/earth_daymap_1k.jpg");
-
   useFrame(({ clock }) => {
     const time = clock.getElapsedTime() * orbitSpeed * 0.3;
     const x = sunPosition.x + Math.cos(time) * earthOrbitRadius;
@@ -97,14 +86,33 @@ export function Earth({
       }}
     >
       <sphereGeometry args={[12, 32, 32]} />
-      <meshStandardMaterial
-        map={colorMap}
-        roughness={1}
-        metalness={0}
-        emissive="#0a1a3f"
-        emissiveIntensity={0.15}
-      />
+      <EarthMaterial />
     </mesh>
+  );
+}
+
+// Separate component to handle texture loading with proper caching
+function EarthMaterial() {
+  // ✅ Load texture with proper Suspense handling
+  const colorMap = useTexture("/textures/earth/earth_daymap_1k.jpg");
+
+  // ✅ Dispose texture on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (colorMap) {
+        colorMap.dispose();
+      }
+    };
+  }, [colorMap]);
+
+  return (
+    <meshStandardMaterial
+      map={colorMap}
+      roughness={1}
+      metalness={0}
+      emissive="#0a1a3f"
+      emissiveIntensity={0.15}
+    />
   );
 }
 
@@ -115,7 +123,7 @@ function OrbitLine({ radius }: { radius: number }) {
   for (let i = 0; i <= segments; i++) {
     const angle = (i / segments) * Math.PI * 2;
     points.push(
-      new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius),
+      new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
     );
   }
 
@@ -150,7 +158,7 @@ function AsteroidOrbitLine({
       groupRef.current.position.set(
         earthPositionRef.current.x,
         yOffset,
-        earthPositionRef.current.z,
+        earthPositionRef.current.z
       );
     }
   });
@@ -200,7 +208,7 @@ function CameraController({
 export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
   const earthPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const [hoveredAsteroidId, setHoveredAsteroidId] = useState<string | null>(
-    null,
+    null
   );
   const [earthHovered, setEarthHovered] = useState(false);
 
@@ -226,9 +234,9 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
         //   window.location.reload(); // simple reload fallback
         // }}
         shadows
-        dpr={[1, 1.1]}              // ✅ limit pixel ratio
+        dpr={[1, 1.1]} // ✅ limit pixel ratio
         gl={{
-          antialias: true,          // smooth edges
+          antialias: true, // smooth edges
           powerPreference: "low-power", // ✅ ask GPU to chill
           preserveDrawingBuffer: false,
         }}
@@ -246,7 +254,10 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
         <Sun />
 
         {/* Directional "sunlight" that always points at Earth */}
-        <SunDirectionalLight sunPosition={sunPosition} earthPositionRef={earthPositionRef} />
+        <SunDirectionalLight
+          sunPosition={sunPosition}
+          earthPositionRef={earthPositionRef}
+        />
 
         {/* Stars background */}
         <Stars
@@ -260,11 +271,13 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
         />
 
         {/* Earth (will receive shadows) */}
-        <Earth
-          orbitSpeed={orbitSpeed}
-          earthPositionRef={earthPositionRef}
-          onHover={setEarthHovered}
-        />
+        <Suspense fallback={null}>
+          <Earth
+            orbitSpeed={orbitSpeed}
+            earthPositionRef={earthPositionRef}
+            onHover={setEarthHovered}
+          />
+        </Suspense>
 
         {/* rest of your scene: asteroids, orbit lines, camera controller, etc. */}
         {asteroids.map((asteroid) => (
