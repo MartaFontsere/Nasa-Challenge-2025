@@ -50,15 +50,16 @@ function SunMaterial() {
   // ✅ Load texture with proper Suspense handling
   const suncolorMap = useTexture("/textures/sun/sun_texture_2k.jpg");
 
-  return (
-    <meshStandardMaterial
-      map={suncolorMap}
-      roughness={1}
-      metalness={0}
-      emissive="#0a1a3f"
-      emissiveIntensity={0.15}
-    />
-  );
+  // ✅ Dispose texture on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (suncolorMap) {
+        suncolorMap.dispose();
+      }
+    };
+  }, [suncolorMap]);
+
+  return <meshBasicMaterial map={suncolorMap} />;
 }
 
 // Earth orbits around the Sun
@@ -370,7 +371,7 @@ function SunDirectionalLight({
     <directionalLight
       ref={dirRef}
       castShadow
-      intensity={2.2}
+      intensity={4}
       color={"#fff"}
       // shadow props configured in useEffect
     />
