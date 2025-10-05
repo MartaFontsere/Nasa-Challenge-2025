@@ -40,8 +40,6 @@ function Sun() {
         <sphereGeometry args={[24, 32, 32]} />
         <meshBasicMaterial color="#FF8C00" transparent opacity={0.15} />
       </mesh>
-      {/* Add point light at sun position */}
-      <pointLight intensity={3} distance={1000} />
     </group>
   );
 }
@@ -245,19 +243,27 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
         <color attach="background" args={["#03040a"]} />
         <fog attach="fog" args={["#03040a", 300, 1200]} />
 
-        {/* Ambient / fill lights */}
-        <ambientLight intensity={0.2} />
-        <hemisphereLight args={["#e7f8ff", "#101020", 0.12]} />
+        {/* Minimal ambient light - just enough to see dark sides */}
+        <ambientLight intensity={0.5} />
 
         {/* Keep your Sun visual (stationary) */}
         <Suspense fallback={null}>
           <Sun />
         </Suspense>
 
-        {/* Directional "sunlight" that always points at Earth */}
-        <SunDirectionalLight
-          sunPosition={sunPosition}
-          earthPositionRef={earthPositionRef}
+        {/* Point light at sun position - radiates in all directions */}
+        <pointLight
+          position={[sunPosition.x, 0, sunPosition.z]}
+          intensity={100}
+          distance={2000}
+          decay={0.8}
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-bias={-0.0005}
+          shadow-camera-near={10}
+          shadow-camera-far={2000}
         />
 
         {/* Stars background */}
@@ -304,57 +310,5 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
         <CameraController earthPositionRef={earthPositionRef} />
       </Canvas>
     </div>
-  );
-}
-
-function SunDirectionalLight({
-  sunPosition,
-  earthPositionRef,
-}: {
-  sunPosition: { x: number; y?: number; z: number };
-  earthPositionRef: React.MutableRefObject<THREE.Vector3>;
-}) {
-  const dirRef = useRef<THREE.DirectionalLight | null>(null);
-
-  // configure shadow camera and map size once
-  useEffect(() => {
-    const dir = dirRef.current;
-    if (!dir) return;
-
-    // shadow map settings
-    dir.shadow.mapSize.width = 512;
-    dir.shadow.mapSize.height = 512;
-    dir.shadow.bias = -0.0005;
-
-    // make shadow camera big enough to cover Earth's orbit area (tweak if necessary)
-    const cam = dir.shadow.camera as THREE.OrthographicCamera;
-    cam.left = -400;
-    cam.right = 400;
-    cam.top = 400;
-    cam.bottom = -400;
-    cam.near = 0.5;
-    cam.far = 2000;
-    dir.shadow.camera.updateProjectionMatrix();
-  }, []);
-
-  // each frame move the light to sun position and point it to the Earth
-  useFrame(() => {
-    const dir = dirRef.current;
-    if (!dir) return;
-    dir.position.set(sunPosition.x, (sunPosition.y ?? 0) + 60, sunPosition.z); // offset upward a bit
-    // ensure the built-in target object follows Earth's current position
-    dir.target.position.copy(earthPositionRef.current);
-    dir.target.updateMatrixWorld();
-  });
-
-  return (
-    // actual directional light (the "sun rays")
-    <directionalLight
-      ref={dirRef}
-      castShadow
-      intensity={4}
-      color={"#fff"}
-      // shadow props configured in useEffect
-    />
   );
 }
