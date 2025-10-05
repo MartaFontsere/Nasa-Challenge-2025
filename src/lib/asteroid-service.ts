@@ -34,10 +34,6 @@ export class AsteroidService {
         return mockAsteroids;
       }
     } catch (error) {
-      console.warn(
-        "Failed to fetch NASA asteroid data, falling back to mock data:",
-        error
-      );
       return mockAsteroids;
     }
   }

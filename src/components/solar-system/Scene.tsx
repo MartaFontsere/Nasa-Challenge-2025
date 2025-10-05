@@ -154,35 +154,23 @@ function OrbitLine({ radius }: { radius: number }) {
   );
 }
 
-// Dynamic orbit line that follows Earth's position
+// Dynamic orbit line that follows Sun's position
 function AsteroidOrbitLine({
   radius,
   yOffset,
-  earthPositionRef,
   visible,
 }: {
   radius: number;
   yOffset: number;
-  earthPositionRef: React.MutableRefObject<THREE.Vector3>;
   visible: boolean;
 }) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame(() => {
-    if (groupRef.current) {
-      // Position at Earth's X/Z but with the asteroid's Y offset
-      groupRef.current.position.set(
-        earthPositionRef.current.x,
-        yOffset,
-        earthPositionRef.current.z
-      );
-    }
-  });
+  // Sun position (stationary)
+  const sunPosition = new THREE.Vector3(-200, 0, 0);
 
   if (!visible) return null;
 
   return (
-    <group ref={groupRef}>
+    <group position={[sunPosition.x, yOffset, sunPosition.z]}>
       <OrbitLine radius={radius} />
     </group>
   );
@@ -244,11 +232,6 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
   return (
     <div className="w-full h-screen">
       <Canvas
-        // onContextLost={(e) => {
-        //   e.preventDefault();
-        //   console.warn("⚠️ WebGL context lost — reloading scene...");
-        //   window.location.reload(); // simple reload fallback
-        // }}
         shadows
         dpr={[1, 1.1]} // ✅ limit pixel ratio
         gl={{
@@ -314,7 +297,6 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
             key={orbit.id}
             radius={orbit.radius}
             yOffset={orbit.yOffset}
-            earthPositionRef={earthPositionRef}
             visible={hoveredAsteroidId === orbit.id}
           />
         ))}
@@ -325,7 +307,6 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
   );
 }
 
-// inside Scene.tsx (somewhere above the return or inside the file scope)
 function SunDirectionalLight({
   sunPosition,
   earthPositionRef,

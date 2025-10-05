@@ -87,7 +87,6 @@ function SimulatorContentInner({ asteroids }: SimulatorClientProps) {
         setImpactZones(getImpactZones(impactResults));
       }
     } catch (error) {
-      console.error("Error calculating impact:", error);
       // You could add error state handling here
     }
   };

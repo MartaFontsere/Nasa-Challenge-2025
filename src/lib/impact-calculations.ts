@@ -311,7 +311,7 @@ async function getPopulationDensity(lat: number, lng: number): Promise<number> {
       }
     }
   } catch (error) {
-    console.warn("Failed to fetch population density, using default", error);
+    // Failed to fetch, will use default
   }
 
   // Default to moderate urban density
@@ -421,7 +421,7 @@ export async function isOceanImpact(
       return isOcean;
     }
   } catch (error) {
-    console.warn("Failed to fetch ocean data, using fallback heuristic", error);
+    // Failed to fetch, will use heuristic
   }
 
   // Fallback: Simple heuristic based on major ocean areas

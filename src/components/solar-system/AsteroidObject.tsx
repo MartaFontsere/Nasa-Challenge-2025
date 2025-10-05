@@ -6,7 +6,6 @@ import { Sphere } from "@react-three/drei";
 import * as THREE from "three";
 import type { Asteroid } from "@/types/asteroid";
 
-
 interface AsteroidObjectProps {
   asteroid: Asteroid;
   onSelect: (asteroid: Asteroid) => void;
@@ -25,21 +24,24 @@ export function AsteroidObject({
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Orbit animation - asteroids orbit around Earth
+  // Sun position (same as in Scene.tsx)
+  const sunPosition = new THREE.Vector3(-200, 0, 0);
+
+  // Orbit animation - asteroids orbit around the Sun
   useFrame(({ clock }) => {
     if (meshRef.current && asteroid.orbitRadius) {
       const time = clock.getElapsedTime() * orbitSpeed;
       const angle = time + (Number.parseInt(asteroid.id, 10) % 100) / 10;
 
-      // Calculate position relative to Earth
+      // Calculate position relative to Sun
       const orbitX = Math.cos(angle) * asteroid.orbitRadius;
       const orbitZ = Math.sin(angle) * asteroid.orbitRadius;
       const orbitY = asteroid.position?.y || 0;
 
-      // Position asteroid relative to Earth
-      meshRef.current.position.x = earthPositionRef.current.x + orbitX;
+      // Position asteroid relative to Sun
+      meshRef.current.position.x = sunPosition.x + orbitX;
       meshRef.current.position.y = orbitY;
-      meshRef.current.position.z = earthPositionRef.current.z + orbitZ;
+      meshRef.current.position.z = sunPosition.z + orbitZ;
       meshRef.current.rotation.y += 0.01;
     }
   });
