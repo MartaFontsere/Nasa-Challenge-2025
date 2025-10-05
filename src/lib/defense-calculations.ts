@@ -136,9 +136,7 @@ export function calculateDefenseCost(
   const momentumChangeNeeded = mission.asteroidMass * mission.deltaVRequired;
 
   // Calculate spacecraft mass needed based on system efficiency
-  // For kinetic impactor: uses direct collision momentum transfer
-  // For gravity tractor: needs to operate for extended period
-  // For nuclear: uses explosion energy
+  // All systems now heavily influenced by delta-v requirement
   let spacecraftMassKg: number;
 
   switch (systemType) {
@@ -146,24 +144,32 @@ export function calculateDefenseCost(
       // Momentum: m_spacecraft × v_spacecraft = efficiency × m_asteroid × Δv
       // Assuming spacecraft velocity ~10 km/s relative impact
       const impactVelocity = 10000; // m/s
-      spacecraftMassKg =
+      const baseMassKinetic =
         momentumChangeNeeded / (system.efficiency * impactVelocity);
-      spacecraftMassKg = Math.max(500, Math.min(spacecraftMassKg, 10000)); // 500kg-10 tons
+      // Scale significantly with delta-v
+      spacecraftMassKg = baseMassKinetic * (1 + mission.deltaVRequired * 100);
+      spacecraftMassKg = Math.max(500, Math.min(spacecraftMassKg, 20000));
+      // Round to nearest 100 kg
+      spacecraftMassKg = Math.round(spacecraftMassKg / 100) * 100;
       break;
 
     case "gravity-tractor":
       // Needs larger spacecraft for extended operations
-      // Scale with delta-v requirement
+      // Heavily scaled with delta-v requirement
       const baseMass = 2000; // ~2 tons baseline
-      spacecraftMassKg = baseMass + mission.deltaVRequired * 5; // Add mass based on Δv
-      spacecraftMassKg = Math.max(1500, Math.min(spacecraftMassKg, 8000));
+      spacecraftMassKg = baseMass + mission.deltaVRequired * 500; // Heavy scaling with Δv
+      spacecraftMassKg = Math.max(1500, Math.min(spacecraftMassKg, 15000));
+      // Round to nearest 100 kg
+      spacecraftMassKg = Math.round(spacecraftMassKg / 100) * 100;
       break;
 
     case "nuclear-pulse":
       // Nuclear payload scales with required energy
       const baseNuclearMass = 5000; // ~5 tons baseline
-      spacecraftMassKg = baseNuclearMass + mission.deltaVRequired * 10; // Larger scaling
-      spacecraftMassKg = Math.max(4000, Math.min(spacecraftMassKg, 15000));
+      spacecraftMassKg = baseNuclearMass + mission.deltaVRequired * 1000; // Largest scaling
+      spacecraftMassKg = Math.max(4000, Math.min(spacecraftMassKg, 25000));
+      // Round to nearest 100 kg
+      spacecraftMassKg = Math.round(spacecraftMassKg / 100) * 100;
       break;
   }
 
@@ -171,7 +177,8 @@ export function calculateDefenseCost(
   // Higher delta-v means exponentially more fuel, larger spacecraft, higher precision needed
   // Delta-v is typically 0.001 to 10 m/s, so we scale it up significantly
   const deltaVCostMultiplier = 1 + mission.deltaVRequired * 50; // Direct multiplier - makes delta-v very impactful
-  const launchCost = spacecraftMassKg * system.costPerKg * deltaVCostMultiplier;
+  const rawLaunchCost =
+    spacecraftMassKg * system.costPerKg * deltaVCostMultiplier;
 
   // Development costs (varies by system complexity)
   const developmentCostMultiplier = {
@@ -179,8 +186,12 @@ export function calculateDefenseCost(
     "gravity-tractor": 3,
     "nuclear-pulse": 5,
   };
-  const developmentCost = launchCost * developmentCostMultiplier[systemType];
+  const rawDevelopmentCost =
+    rawLaunchCost * developmentCostMultiplier[systemType];
 
+  // Round costs to nearest 100 million
+  const launchCost = Math.round(rawLaunchCost / 100) * 100;
+  const developmentCost = Math.round(rawDevelopmentCost / 100) * 100;
   const totalCost = launchCost + developmentCost;
 
   // Calculate success probability
