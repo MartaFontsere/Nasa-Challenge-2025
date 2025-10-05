@@ -162,101 +162,28 @@ export function calculateEarthquakeMagnitude(energy: number): number {
 }
 
 /**
- * Calculate tsunami parameters for ocean impacts
- * Based on Ward & Asphaug (2000) and Korycansky & Lynett (2005)
- *
- * Simplified model:
- * 1. Initial wave height at source ~ crater depth
- * 2. Wave propagates radially from impact
- * 3. Wave height decreases with distance but amplifies near coast
- * 4. Coastal run-up height is 2-4x the offshore wave height
- *
- * Returns null for land impacts
+ * Calculate earthquake damage radius based on magnitude
+ * Different damage levels at different distances
+ * Based on seismic attenuation models
  */
-export function calculateTsunamiHeight(
-  craterDiameter: number,
-  isOceanImpact: boolean
-): number | null {
-  if (!isOceanImpact) return null;
+export function calculateEarthquakeRadius(magnitude: number): {
+  severe: number; // Severe damage (Modified Mercalli IX+)
+  moderate: number; // Moderate damage (Modified Mercalli VI-VIII)
+} {
+  // Empirical formula: radius increases exponentially with magnitude
+  // R ≈ 10^(0.5*M - 1) for severe damage
+  const severeRadius = Math.pow(10, 0.5 * magnitude - 1); // km
+  const moderateRadius = severeRadius * 2.5; // km
 
-  // Initial wave height is roughly equal to crater depth
-  const craterDepth = calculateCraterDepth(craterDiameter);
-
-  // Deep ocean wave height (meters)
-  // Decreases as wave spreads out, but we calculate at ~100km from impact
-  const deepOceanWaveHeight = craterDepth * 0.3;
-
-  // Coastal run-up amplification factor (2-4x)
-  // Depends on bathymetry and coastal slope
-  const runUpFactor = 3.0;
-
-  const coastalHeight = deepOceanWaveHeight * runUpFactor;
-
-  // Cap at realistic maximum (2004 Indian Ocean tsunami was ~30m in some places)
-  return Math.min(coastalHeight, 50);
-}
-
-/**
- * Calculate tsunami propagation radius
- * Tsunamis can travel thousands of km across oceans
- * Simplified: based on energy and ocean depth
- */
-export function calculateTsunamiRadius(craterDiameter: number): number {
-  // Tsunami propagation distance in km
-  // Larger impacts create tsunamis that travel further
-  // Using square root scaling for energy dissipation
-  const baseRadius = Math.sqrt(craterDiameter / 1000) * 500; // km
-
-  // Cap at reasonable ocean-crossing distance
-  return Math.min(baseRadius, 5000); // Max 5000 km
-}
-
-/**
- * Estimate tsunami casualties for ocean impacts
- * Simplified model considering:
- * - Coastal population within tsunami reach
- * - Wave height impact on mortality
- * - Assumes some warning time for evacuation
- */
-export function estimateTsunamiCasualties(
-  tsunamiHeight: number | null,
-  craterDiameter: number
-): number | null {
-  if (!tsunamiHeight) return null;
-
-  // Calculate affected coastal perimeter
-  const tsunamiRadius = calculateTsunamiRadius(craterDiameter);
-
-  // Approximate affected coastline (assuming tsunami spreads in all directions)
-  // But only ~30% of the perimeter is likely to be coastline
-  const potentialCoastlineKm = 2 * Math.PI * tsunamiRadius * 0.3;
-
-  // Average coastal population density (people per km of coastline)
-  // Global average for populated coasts: ~5000 people/km
-  const coastalPopDensity = 5000;
-
-  // Inundation distance inland (how far the wave travels on land)
-  // Roughly proportional to wave height
-  const inundationDistanceKm = tsunamiHeight * 0.1; // 10m wave goes ~1km inland
-
-  // Total affected coastal population
-  const affectedPopulation = potentialCoastlineKm * coastalPopDensity;
-
-  // Mortality rate based on wave height and assuming some warning/evacuation
-  let mortalityRate = 0.05; // 5% baseline (with some warning)
-  if (tsunamiHeight > 5) mortalityRate = 0.15; // 15% for 5-10m
-  if (tsunamiHeight > 10) mortalityRate = 0.3; // 30% for 10-20m
-  if (tsunamiHeight > 20) mortalityRate = 0.5; // 50% for >20m
-
-  const casualties = Math.floor(affectedPopulation * mortalityRate);
-
-  // Cap at reasonable maximum
-  return Math.min(casualties, 10_000_000); // Max 10 million
+  return {
+    severe: severeRadius,
+    moderate: moderateRadius,
+  };
 }
 
 /**
  * Fetch population density for a location using OpenStreetMap data
- * Falls back to default urban density if API fails
+ * Falls back to reasonable estimates based on location type
  */
 async function getPopulationDensity(lat: number, lng: number): Promise<number> {
   try {
@@ -272,24 +199,40 @@ async function getPopulationDensity(lat: number, lng: number): Promise<number> {
 
     if (response.ok) {
       const data = await response.json();
+      console.log("Nominatim response:", data); // Debug logging
+
+      // Check for ocean/water bodies first
+      if (
+        data.type === "sea" ||
+        data.type === "ocean" ||
+        data.class === "waterway" ||
+        (data.class === "natural" && data.type === "water")
+      ) {
+        console.log("Detected water body");
+        return 0;
+      }
+
+      // Check if no address found (remote/uninhabited areas)
+      if (!data.address) {
+        console.log("No address found - uninhabited area");
+        return 5; // Very sparse population
+      }
 
       // Estimate population density based on location type
       const addressType = data.addresstype || data.type;
+      const placeType = data.class;
 
-      // Urban areas
-      if (addressType === "city" || addressType === "town") {
-        return 3000; // High density urban
-      }
-      if (addressType === "village" || addressType === "suburb") {
-        return 1000; // Medium density
-      }
-      if (addressType === "hamlet" || addressType === "isolated_dwelling") {
-        return 100; // Low density rural
-      }
+      // Check for major cities by name first
+      const cityName = (
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.municipality ||
+        data.display_name ||
+        ""
+      ).toLowerCase();
 
-      // Check if it's a major city by name
-      const cityName = data.address?.city || data.address?.town || "";
       const majorCities = [
+        "barcelona",
         "london",
         "paris",
         "tokyo",
@@ -300,22 +243,93 @@ async function getPopulationDensity(lat: number, lng: number): Promise<number> {
         "mumbai",
         "seoul",
         "jakarta",
+        "moscow",
+        "istanbul",
+        "los angeles",
+        "mexico city",
+        "cairo",
+        "buenos aires",
       ];
-      if (majorCities.some((city) => cityName.toLowerCase().includes(city))) {
+
+      if (majorCities.some((city) => cityName.includes(city))) {
+        console.log("Major city detected:", cityName);
         return 10000; // Very high density for major cities
       }
 
-      // Ocean or uninhabited
-      if (!data.address || data.type === "sea" || data.type === "ocean") {
-        return 0;
+      // Check for cities and urban areas
+      if (
+        addressType === "city" ||
+        addressType === "town" ||
+        data.address?.city ||
+        data.address?.town
+      ) {
+        console.log("City/town detected");
+        return 3000; // High density urban
       }
+
+      // Villages and suburbs
+      if (
+        addressType === "village" ||
+        addressType === "suburb" ||
+        data.address?.village ||
+        data.address?.suburb
+      ) {
+        console.log("Village/suburb detected");
+        return 1000; // Medium density
+      }
+
+      // Small settlements
+      if (
+        addressType === "hamlet" ||
+        addressType === "isolated_dwelling" ||
+        data.address?.hamlet
+      ) {
+        console.log("Hamlet detected");
+        return 100; // Low density rural
+      }
+
+      // Check for uninhabited natural features
+      if (placeType === "natural") {
+        if (
+          data.type === "desert" ||
+          data.type === "sand" ||
+          data.type === "bare_rock"
+        ) {
+          console.log("Desert/uninhabited natural area detected");
+          return 0;
+        }
+        if (
+          data.type === "forest" ||
+          data.type === "wood" ||
+          data.type === "grassland"
+        ) {
+          console.log("Forest/natural area detected");
+          return 2; // Very sparse
+        }
+      }
+
+      // Check for county, state, or country level (rural areas)
+      if (
+        (data.address?.country && !data.address?.city && !data.address?.town) ||
+        data.address?.state ||
+        data.address?.county
+      ) {
+        // If we only have country/state/county level, it's likely rural
+        console.log("Rural area detected (state/county level)");
+        return 50; // Rural/agricultural
+      }
+
+      // If we have some address but couldn't categorize, assume rural
+      console.log("Unclassified location, assuming rural:", addressType);
+      return 200; // Low-medium rural density
     }
   } catch (error) {
     console.warn("Failed to fetch population density, using default", error);
   }
 
-  // Default to moderate urban density
-  return POPULATION_DENSITY_URBAN;
+  // Default to low density if API fails
+  console.log("API failed, using default");
+  return 200;
 }
 
 /**
@@ -327,14 +341,11 @@ export async function estimateCasualties(
   fireballRadius: number,
   shockwaveRadius: number,
   thermalRadius: number,
-  tsunamiHeight: number | null,
-  craterDiameter: number,
   location: { lat: number; lng: number }
 ): Promise<{
   fireball: number;
   shockwave: number;
   thermalRadiation: number;
-  tsunami: number | null;
   total: number;
   populationDensity: number;
 }> {
@@ -344,123 +355,37 @@ export async function estimateCasualties(
     location.lng
   );
 
-  // Calculate areas for each zone
-  // Ensure proper ordering: fireball < thermal < shockwave
+  // Calculate total areas for each zone (full circles)
   const fireballArea = Math.PI * Math.pow(fireballRadius, 2);
   const thermalTotalArea = Math.PI * Math.pow(thermalRadius, 2);
   const shockwaveTotalArea = Math.PI * Math.pow(shockwaveRadius, 2);
 
-  // Non-overlapping areas (ensure no negative values)
-  const thermalArea = Math.max(0, thermalTotalArea - fireballArea);
-  const shockwaveArea = Math.max(0, shockwaveTotalArea - thermalTotalArea);
-
-  // Improved mortality rates based on blast effects research
+  // Mortality rates for each zone
   // Fireball: 100% mortality (complete vaporization)
   // Thermal: 70% mortality (severe burns, fires, radiation)
   // Shockwave: 40% mortality (overpressure, building damage, debris)
   const fireballCasualties = Math.floor(fireballArea * populationDensity * 1.0);
-  const thermalCasualties = Math.floor(thermalArea * populationDensity * 0.7);
+  const thermalCasualties = Math.floor(
+    thermalTotalArea * populationDensity * 0.7
+  );
   const shockwaveCasualties = Math.floor(
-    shockwaveArea * populationDensity * 0.4
+    shockwaveTotalArea * populationDensity * 0.4
   );
 
-  // Tsunami casualties (if ocean impact)
-  const tsunamiCasualties = estimateTsunamiCasualties(
-    tsunamiHeight,
-    craterDiameter
+  // Total is the maximum of all zones (zones overlap, so we don't sum)
+  // People in inner zones are also in outer zones, so take the max
+  const total = Math.min(
+    Math.max(fireballCasualties, thermalCasualties, shockwaveCasualties),
+    EARTH_POPULATION
   );
-
-  // Calculate total and cap at Earth's population
-  const uncappedTotal =
-    fireballCasualties +
-    shockwaveCasualties +
-    thermalCasualties +
-    (tsunamiCasualties || 0);
-
-  const total = Math.min(uncappedTotal, EARTH_POPULATION);
 
   return {
     fireball: fireballCasualties,
     shockwave: shockwaveCasualties,
     thermalRadiation: thermalCasualties,
-    tsunami: tsunamiCasualties,
     total,
     populationDensity, // Include for debugging/display
   };
-}
-
-/**
- * Check if impact location is in ocean
- * Uses a simple heuristic based on major ocean areas
- * For production: use OpenStreetMap Nominatim reverse geocoding
- * https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}
- */
-export async function isOceanImpact(
-  lat: number,
-  lng: number
-): Promise<boolean> {
-  // Try to use a free reverse geocoding API
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=3`,
-      {
-        headers: {
-          "User-Agent": "NASA-Challenge-Impact-Simulator",
-        },
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      // Check if the location is in ocean (no address components or specific ocean markers)
-      const isOcean =
-        !data.address ||
-        data.type === "sea" ||
-        data.type === "ocean" ||
-        (data.class === "natural" && data.type === "water");
-      return isOcean;
-    }
-  } catch (error) {
-    console.warn("Failed to fetch ocean data, using fallback heuristic", error);
-  }
-
-  // Fallback: Simple heuristic based on major ocean areas
-  // This is approximate and not accurate for all cases
-  return isOceanImpactHeuristic(lat, lng);
-}
-
-/**
- * Fallback heuristic for ocean detection
- * Based on approximate ocean coverage
- */
-function isOceanImpactHeuristic(lat: number, lng: number): boolean {
-  // Major ocean areas (very simplified)
-  // Pacific Ocean: large area
-  if (lat > -60 && lat < 60 && lng > 120 && lng < -70) return true;
-  if (lat > -60 && lat < 60 && lng > -180 && lng < -100) return true;
-
-  // Atlantic Ocean
-  if (lat > -60 && lat < 60 && lng > -70 && lng < 20) {
-    // Exclude Americas and Europe/Africa
-    if (!(lng > -100 && lng < -30 && lat > -55 && lat < 70)) {
-      if (!(lng > -20 && lng < 50 && lat > -35 && lat < 70)) {
-        return true;
-      }
-    }
-  }
-
-  // Indian Ocean
-  if (lat > -60 && lat < 30 && lng > 20 && lng < 120) {
-    // Exclude Africa, Middle East, and Asia
-    if (!(lng > 20 && lng < 60 && lat > -35 && lat < 40)) {
-      if (!(lng > 60 && lng < 100 && lat > 0 && lat < 40)) {
-        return true;
-      }
-    }
-  }
-
-  // Default to land
-  return false;
 }
 
 /**
@@ -490,16 +415,13 @@ export async function calculateImpactEffects(
 
   // Calculate environmental effects
   const magnitude = calculateEarthquakeMagnitude(energy);
-  const isOcean = await isOceanImpact(location.lat, location.lng);
-  const tsunamiHeight = calculateTsunamiHeight(craterDiameter, isOcean);
+  const earthquakeRadii = calculateEarthquakeRadius(magnitude);
 
   // Estimate casualties with location-based population density
   const casualties = await estimateCasualties(
     fireballRadius,
     shockwaveRadius,
     thermalRadius,
-    tsunamiHeight,
-    craterDiameter,
     location
   );
 
@@ -518,11 +440,10 @@ export async function calculateImpactEffects(
     shockwaveRadius,
     thermalRadiationRadius: thermalRadius,
     earthquakeMagnitude: magnitude,
-    tsunamiHeight,
+    earthquakeRadii,
     casualties,
     impactAngle: angle,
     impactVelocity: asteroid.velocity,
-    isOceanImpact: isOcean,
   };
 }
 
@@ -535,51 +456,45 @@ export function getImpactZones(results: ImpactResults): ImpactZone[] {
     {
       type: "crater",
       radius: results.craterDiameter / 2000, // Convert meters to km
-      color: "#000000",
+      color: "#1a1a1a",
       label: "Crater",
     },
     {
       type: "fireball",
       radius: results.fireballRadius,
-      color: "#ff0000",
+      color: "#dc2626",
       label: `Fireball (${results.casualties.fireball.toLocaleString()} casualties)`,
       casualties: results.casualties.fireball,
     },
     {
       type: "thermal",
       radius: results.thermalRadiationRadius,
-      color: "#ff8800",
+      color: "#f97316",
       label: `Thermal Radiation (${results.casualties.thermalRadiation.toLocaleString()} casualties)`,
       casualties: results.casualties.thermalRadiation,
     },
     {
       type: "shockwave",
       radius: results.shockwaveRadius,
-      color: "#ffff00",
+      color: "#facc15",
       label: `Shockwave (${results.casualties.shockwave.toLocaleString()} casualties)`,
       casualties: results.casualties.shockwave,
     },
-  ];
-
-  // Add tsunami zone only for ocean impacts
-  if (
-    results.isOceanImpact &&
-    results.tsunamiHeight !== null &&
-    results.casualties.tsunami !== null
-  ) {
-    // Calculate realistic tsunami propagation radius
-    const tsunamiRadius = calculateTsunamiRadius(results.craterDiameter);
-    zones.push({
-      type: "tsunami",
-      radius: tsunamiRadius,
-      color: "#0088ff",
-      label: `Tsunami Affected Area (${results.casualties.tsunami.toLocaleString()} casualties, ${results.tsunamiHeight.toFixed(
+    {
+      type: "earthquake-severe",
+      radius: results.earthquakeRadii.severe,
+      color: "#7c2d12",
+      label: `Earthquake - Severe Damage (Magnitude ${results.earthquakeMagnitude.toFixed(
         1
-      )}m coastal waves)`,
-      casualties: results.casualties.tsunami,
-      isCoastal: true,
-    });
-  }
+      )})`,
+    },
+    {
+      type: "earthquake-moderate",
+      radius: results.earthquakeRadii.moderate,
+      color: "#ea580c",
+      label: `Earthquake - Moderate Damage`,
+    },
+  ];
 
   return zones;
 }

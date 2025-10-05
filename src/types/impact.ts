@@ -18,14 +18,16 @@ export interface ImpactResults {
 
   // Environmental effects
   earthquakeMagnitude: number; // Richter scale
-  tsunamiHeight: number | null; // meters (null if not ocean impact)
+  earthquakeRadii: {
+    severe: number; // km
+    moderate: number; // km
+  };
 
   // Casualties (estimated)
   casualties: {
     fireball: number;
     shockwave: number;
     thermalRadiation: number;
-    tsunami: number | null; // null if not ocean impact
     total: number;
     populationDensity: number; // people per km²
   };
@@ -33,14 +35,18 @@ export interface ImpactResults {
   // Additional data
   impactAngle: number; // degrees
   impactVelocity: number; // km/s
-  isOceanImpact: boolean; // whether the impact is in ocean
 }
 
 export interface ImpactZone {
-  type: "fireball" | "shockwave" | "thermal" | "crater" | "tsunami";
+  type:
+    | "fireball"
+    | "shockwave"
+    | "thermal"
+    | "crater"
+    | "earthquake-severe"
+    | "earthquake-moderate";
   radius: number; // km
   color: string;
   label: string;
   casualties?: number;
-  isCoastal?: boolean; // For tsunami zones
 }

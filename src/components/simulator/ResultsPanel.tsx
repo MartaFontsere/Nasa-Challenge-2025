@@ -123,19 +123,15 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
               value={`${results.thermalRadiationRadius.toFixed(2)} km`}
             />
 
-            {/* Ocean Impact Indicator */}
+            {/* Earthquake Effects */}
             <ResultCard
-              title="Impact Location"
-              value={results.isOceanImpact ? "Ocean" : "Land"}
+              title="Earthquake Severe Damage Radius"
+              value={`${results.earthquakeRadii.severe.toFixed(2)} km`}
             />
-
-            {/* Tsunami - only for ocean impacts */}
-            {results.isOceanImpact && results.tsunamiHeight !== null && (
-              <ResultCard
-                title="Tsunami Height"
-                value={`${results.tsunamiHeight.toFixed(1)} m`}
-              />
-            )}
+            <ResultCard
+              title="Earthquake Moderate Damage Radius"
+              value={`${results.earthquakeRadii.moderate.toFixed(2)} km`}
+            />
           </div>
         </CardContent>
       </Card>
@@ -163,12 +159,6 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
               title="Thermal Zone"
               value={formatNumber(results.casualties.thermalRadiation, 0)}
             />
-            {results.isOceanImpact && results.casualties.tsunami !== null && (
-              <ResultCard
-                title="Tsunami Zone"
-                value={formatNumber(results.casualties.tsunami, 0)}
-              />
-            )}
             <ResultCard
               title="Total Estimated"
               value={formatNumber(results.casualties.total, 0)}
