@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, Line } from "@react-three/drei";
+import { OrbitControls, Stars, Line, useTexture } from "@react-three/drei";
 import { AsteroidObject } from "./AsteroidObject";
 import type { Asteroid } from "@/types/asteroid";
 import * as THREE from "three";
@@ -15,20 +15,20 @@ interface SceneProps {
 
 // Sun is stationary at a position
 function Sun() {
-  const sunGroupRef = useRef<THREE.Group>(null);
+  const sunRef = useRef<THREE.Mesh>(null);
 
   useFrame(() => {
-    if (sunGroupRef.current) {
-      sunGroupRef.current.rotation.y += 0.001;
+    if (sunRef.current) {
+      sunRef.current.rotation.y += 0.001;
     }
   });
 
   return (
-    <group ref={sunGroupRef} position={[-200, 0, 0]}>
+    <group ref={sunRef} position={[-200, 0, 0]}>
       {/* Sun core */}
       <mesh>
         <sphereGeometry args={[20, 32, 32]} />
-        <meshBasicMaterial color="#FDB813" />
+        <SunMaterial />
       </mesh>
       {/* Glow effect */}
       <mesh>
@@ -46,8 +46,24 @@ function Sun() {
   );
 }
 
+function SunMaterial() {
+  // ✅ Load texture with proper Suspense handling
+  const suncolorMap = useTexture("/textures/sun/sun_texture_2k.jpg");
+
+  // ✅ Dispose texture on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (suncolorMap) {
+        suncolorMap.dispose();
+      }
+    };
+  }, [suncolorMap]);
+
+  return <meshBasicMaterial map={suncolorMap} />;
+}
+
 // Earth orbits around the Sun
-function Earth({
+export function Earth({
   orbitSpeed,
   earthPositionRef,
   onHover,
@@ -61,16 +77,13 @@ function Earth({
   const sunPosition = new THREE.Vector3(-200, 0, 0);
 
   useFrame(({ clock }) => {
+    const time = clock.getElapsedTime() * orbitSpeed * 0.3;
+    const x = sunPosition.x + Math.cos(time) * earthOrbitRadius;
+    const z = sunPosition.z + Math.sin(time) * earthOrbitRadius;
+
     if (earthRef.current) {
-      // Earth orbits around the Sun
-      const time = clock.getElapsedTime() * orbitSpeed * 0.3;
-      const x = sunPosition.x + Math.cos(time) * earthOrbitRadius;
-      const z = sunPosition.z + Math.sin(time) * earthOrbitRadius;
-
       earthRef.current.position.set(x, 0, z);
-      earthRef.current.rotation.y += 0.002;
-
-      // Update the position reference so camera can follow
+      earthRef.current.rotation.y += 0.0015;
       earthPositionRef.current.set(x, 0, z);
     }
   });
@@ -89,25 +102,44 @@ function Earth({
       }}
     >
       <sphereGeometry args={[12, 64, 64]} />
-      <meshStandardMaterial
-        color="#2B65EC"
-        roughness={0.8}
-        metalness={0.1}
-        emissive="#1a4d8f"
-        emissiveIntensity={0.3}
-      />
+      <EarthMaterial />
     </mesh>
+  );
+}
+
+// Separate component to handle texture loading with proper caching
+function EarthMaterial() {
+  // ✅ Load texture with proper Suspense handling
+  const colorMap = useTexture("/textures/earth/earth_daymap_2k.jpg");
+
+  // ✅ Dispose texture on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (colorMap) {
+        colorMap.dispose();
+      }
+    };
+  }, [colorMap]);
+
+  return (
+    <meshStandardMaterial
+      map={colorMap}
+      roughness={1}
+      metalness={0}
+      emissive="#0a1a3f"
+      emissiveIntensity={0.15}
+    />
   );
 }
 
 function OrbitLine({ radius }: { radius: number }) {
   const points = [];
-  const segments = 128;
+  const segments = 32;
 
   for (let i = 0; i <= segments; i++) {
     const angle = (i / segments) * Math.PI * 2;
     points.push(
-      new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius),
+      new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
     );
   }
 
@@ -122,35 +154,23 @@ function OrbitLine({ radius }: { radius: number }) {
   );
 }
 
-// Dynamic orbit line that follows Earth's position
+// Dynamic orbit line that follows Sun's position
 function AsteroidOrbitLine({
   radius,
   yOffset,
-  earthPositionRef,
   visible,
 }: {
   radius: number;
   yOffset: number;
-  earthPositionRef: React.MutableRefObject<THREE.Vector3>;
   visible: boolean;
 }) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame(() => {
-    if (groupRef.current) {
-      // Position at Earth's X/Z but with the asteroid's Y offset
-      groupRef.current.position.set(
-        earthPositionRef.current.x,
-        yOffset,
-        earthPositionRef.current.z,
-      );
-    }
-  });
+  // Sun position (stationary)
+  const sunPosition = new THREE.Vector3(-200, 0, 0);
 
   if (!visible) return null;
 
   return (
-    <group ref={groupRef}>
+    <group position={[sunPosition.x, yOffset, sunPosition.z]}>
       <OrbitLine radius={radius} />
     </group>
   );
@@ -192,7 +212,7 @@ function CameraController({
 export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
   const earthPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const [hoveredAsteroidId, setHoveredAsteroidId] = useState<string | null>(
-    null,
+    null
   );
   const [earthHovered, setEarthHovered] = useState(false);
 
@@ -211,10 +231,34 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
 
   return (
     <div className="w-full h-screen">
-      <Canvas camera={{ position: [0, 80, 200], fov: 60 }}>
-        {/* Lighting */}
-        <ambientLight intensity={0.5} />
-        <pointLight position={[100, 100, 100]} intensity={0.5} />
+      <Canvas
+        shadows
+        dpr={[1, 1.1]} // ✅ limit pixel ratio
+        gl={{
+          antialias: true, // smooth edges
+          powerPreference: "low-power", // ✅ ask GPU to chill
+          preserveDrawingBuffer: false,
+        }}
+        camera={{ position: [0, 80, 200], fov: 60 }}
+      >
+        {/* subtle background/fog */}
+        <color attach="background" args={["#03040a"]} />
+        <fog attach="fog" args={["#03040a", 300, 1200]} />
+
+        {/* Ambient / fill lights */}
+        <ambientLight intensity={0.2} />
+        <hemisphereLight args={["#e7f8ff", "#101020", 0.12]} />
+
+        {/* Keep your Sun visual (stationary) */}
+        <Suspense fallback={null}>
+          <Sun />
+        </Suspense>
+
+        {/* Directional "sunlight" that always points at Earth */}
+        <SunDirectionalLight
+          sunPosition={sunPosition}
+          earthPositionRef={earthPositionRef}
+        />
 
         {/* Stars background */}
         <Stars
@@ -227,24 +271,16 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
           speed={1}
         />
 
-        {/* Sun - stationary */}
-        <Sun />
+        {/* Earth (will receive shadows) */}
+        <Suspense fallback={null}>
+          <Earth
+            orbitSpeed={orbitSpeed}
+            earthPositionRef={earthPositionRef}
+            onHover={setEarthHovered}
+          />
+        </Suspense>
 
-        {/* Earth orbits around Sun */}
-        <Earth
-          orbitSpeed={orbitSpeed}
-          earthPositionRef={earthPositionRef}
-          onHover={setEarthHovered}
-        />
-
-        {/* Earth's orbit line around the Sun - only visible on hover */}
-        {earthHovered && (
-          <group position={[sunPosition.x, 0, sunPosition.z]}>
-            <OrbitLine radius={earthOrbitRadius} />
-          </group>
-        )}
-
-        {/* Asteroids orbit around Earth */}
+        {/* rest of your scene: asteroids, orbit lines, camera controller, etc. */}
         {asteroids.map((asteroid) => (
           <AsteroidObject
             key={asteroid.id}
@@ -256,20 +292,69 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
           />
         ))}
 
-        {/* Asteroid orbit lines (relative to Earth) - only visible on hover */}
         {asteroidOrbits.map((orbit) => (
           <AsteroidOrbitLine
             key={orbit.id}
             radius={orbit.radius}
             yOffset={orbit.yOffset}
-            earthPositionRef={earthPositionRef}
             visible={hoveredAsteroidId === orbit.id}
           />
         ))}
 
-        {/* Camera controls - follow Earth */}
         <CameraController earthPositionRef={earthPositionRef} />
       </Canvas>
     </div>
+  );
+}
+
+function SunDirectionalLight({
+  sunPosition,
+  earthPositionRef,
+}: {
+  sunPosition: { x: number; y?: number; z: number };
+  earthPositionRef: React.MutableRefObject<THREE.Vector3>;
+}) {
+  const dirRef = useRef<THREE.DirectionalLight | null>(null);
+
+  // configure shadow camera and map size once
+  useEffect(() => {
+    const dir = dirRef.current;
+    if (!dir) return;
+
+    // shadow map settings
+    dir.shadow.mapSize.width = 512;
+    dir.shadow.mapSize.height = 512;
+    dir.shadow.bias = -0.0005;
+
+    // make shadow camera big enough to cover Earth's orbit area (tweak if necessary)
+    const cam = dir.shadow.camera as THREE.OrthographicCamera;
+    cam.left = -400;
+    cam.right = 400;
+    cam.top = 400;
+    cam.bottom = -400;
+    cam.near = 0.5;
+    cam.far = 2000;
+    dir.shadow.camera.updateProjectionMatrix();
+  }, []);
+
+  // each frame move the light to sun position and point it to the Earth
+  useFrame(() => {
+    const dir = dirRef.current;
+    if (!dir) return;
+    dir.position.set(sunPosition.x, (sunPosition.y ?? 0) + 60, sunPosition.z); // offset upward a bit
+    // ensure the built-in target object follows Earth's current position
+    dir.target.position.copy(earthPositionRef.current);
+    dir.target.updateMatrixWorld();
+  });
+
+  return (
+    // actual directional light (the "sun rays")
+    <directionalLight
+      ref={dirRef}
+      castShadow
+      intensity={4}
+      color={"#fff"}
+      // shadow props configured in useEffect
+    />
   );
 }

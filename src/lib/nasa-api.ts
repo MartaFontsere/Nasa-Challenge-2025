@@ -32,10 +32,12 @@ function estimateComposition(
  */
 function generatePosition(index: number, total: number) {
   const angle = (index / total) * Math.PI * 2;
-  const radius = 150 + (index % 3) * 50;
+  // Spread asteroids across a wider range of radii (150-450)
+  const radius = 150 + index * 15; // Linear distribution
   return {
     x: Math.cos(angle) * radius,
-    y: ((index % 5) - 2) * 20,
+    // Spread vertically more (-40 to +40)
+    y: ((index % 9) - 4) * 10,
     z: Math.sin(angle) * radius,
   };
 }
@@ -102,13 +104,15 @@ export async function fetchHazardousAsteroids(limit = 5): Promise<Asteroid[]> {
 
       const composition = estimateComposition(diameter, neo.name);
       const position = generatePosition(index, limit);
-      const orbitRadius = 150 + index * 40;
+      // Match orbit radius with initial position spread (150-450 range)
+      const orbitRadius = 150 + index * 15;
 
       return {
         id: neo.id,
         name: neo.name,
         diameter,
         velocity,
+        orbitalData: neo.orbital_data,
         composition,
         position,
         orbitRadius,
@@ -118,7 +122,6 @@ export async function fetchHazardousAsteroids(limit = 5): Promise<Asteroid[]> {
 
     return asteroids;
   } catch (error) {
-    console.error("Error fetching asteroids from NASA API:", error);
     throw error;
   }
 }
@@ -164,7 +167,6 @@ export async function fetchAsteroidById(id: string): Promise<Asteroid | null> {
       color: getColorForComposition(composition),
     };
   } catch (error) {
-    console.error(`Error fetching asteroid ${id}:`, error);
     return null;
   }
 }

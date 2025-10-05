@@ -324,7 +324,7 @@ async function getPopulationDensity(lat: number, lng: number): Promise<number> {
       return 200; // Low-medium rural density
     }
   } catch (error) {
-    console.warn("Failed to fetch population density, using default", error);
+    // Failed to fetch, will use default
   }
 
   // Default to low density if API fails

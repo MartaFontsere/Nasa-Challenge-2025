@@ -3,7 +3,7 @@ import { AsteroidService } from "@/lib/asteroid-service";
 import HomeClient from "./HomeClient";
 
 async function HomeContent() {
-  const asteroids = await AsteroidService.getAsteroids();
+  const asteroids = await AsteroidService.getAsteroids({ limit: 20 });
   return <HomeClient asteroids={asteroids} />;
 }
 

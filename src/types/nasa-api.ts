@@ -76,7 +76,7 @@ export interface NASACloseApproachData {
   };
   orbiting_body: string;
 }
-
+ 
 export interface NASAOrbitalData {
   orbit_id: string;
   orbit_determination_date: string;
@@ -106,3 +106,4 @@ export interface NASAOrbitalData {
     orbit_class_range: string;
   };
 }
+ 
