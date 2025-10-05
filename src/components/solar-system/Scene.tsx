@@ -15,19 +15,24 @@ interface SceneProps {
 
 // Sun is stationary at a position
 function Sun() {
-  const sunGroupRef = useRef<THREE.Group>(null);
+  const sunRef = useRef<THREE.Mesh>(null);
 
   useFrame(() => {
-    if (sunGroupRef.current) {
-      sunGroupRef.current.rotation.y += 0.001;
+    if (sunRef.current) {
+      sunRef.current.rotation.y += 0.001;
     }
   });
 
   return (
-    <group ref={sunGroupRef} position={[-200, 0, 0]}>
+    // <mesh ref={sunRef}>
+    //   <sphereGeometry args={[20, 32, 32]} />
+    //   <SunMaterial />
+    // </mesh>
+    <group ref={sunRef} position={[-200, 0, 0]}>
       {/* Sun core */}
       <mesh>
         <sphereGeometry args={[20, 32, 32]} />
+        {/* <SunMaterial /> */}
         <meshBasicMaterial color="#FDB813" />
       </mesh>
       {/* Glow effect */}
@@ -43,6 +48,30 @@ function Sun() {
       {/* Add point light at sun position */}
       <pointLight intensity={3} distance={1000} />
     </group>
+  );
+}
+
+function SunMaterial() {
+  // ✅ Load texture with proper Suspense handling
+  const suncolorMap = useTexture("/textures/sun/sun_texture_2k.jpg");
+
+  // ✅ Dispose texture on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (suncolorMap) {
+        suncolorMap.dispose();
+      }
+    };
+  }, [suncolorMap]);
+
+  return (
+    <meshStandardMaterial
+      map={suncolorMap}
+      roughness={1}
+      metalness={0}
+      emissive="#0a1a3f"
+      emissiveIntensity={0.15}
+    />
   );
 }
 
@@ -85,7 +114,7 @@ export function Earth({
         onHover?.(false);
       }}
     >
-      <sphereGeometry args={[12, 32, 32]} />
+      <sphereGeometry args={[12, 64, 64]} />
       <EarthMaterial />
     </mesh>
   );
@@ -94,7 +123,7 @@ export function Earth({
 // Separate component to handle texture loading with proper caching
 function EarthMaterial() {
   // ✅ Load texture with proper Suspense handling
-  const colorMap = useTexture("/textures/earth/earth_daymap_1k.jpg");
+  const colorMap = useTexture("/textures/earth/earth_daymap_2k.jpg");
 
   // ✅ Dispose texture on unmount to prevent memory leaks
   useEffect(() => {
@@ -247,7 +276,7 @@ export function Scene({ asteroids, onAsteroidSelect, orbitSpeed }: SceneProps) {
         <fog attach="fog" args={["#03040a", 300, 1200]} />
 
         {/* Ambient / fill lights */}
-        <ambientLight intensity={0.12} />
+        <ambientLight intensity={0.2} />
         <hemisphereLight args={["#e7f8ff", "#101020", 0.12]} />
 
         {/* Keep your Sun visual (stationary) */}
