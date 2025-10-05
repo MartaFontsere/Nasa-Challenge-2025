@@ -6,6 +6,7 @@ import { Sphere } from "@react-three/drei";
 import * as THREE from "three";
 import type { Asteroid } from "@/types/asteroid";
 
+
 interface AsteroidObjectProps {
   asteroid: Asteroid;
   onSelect: (asteroid: Asteroid) => void;
